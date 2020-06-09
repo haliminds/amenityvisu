@@ -70,7 +70,7 @@ async function getCityByLatLng(lat, lon) {
 
 async function computeVoronoi(amenity) {
 	// clean all markers
-	await removeMarkers(map);
+	await removeMarkers(map, "voronoi");
 	// Recherche des elemnts dans cette zone
 	// 3600000000 : on ajoute pour avoir la "relation" correpondante
     const area_id = 3600000000 + parseInt(cityGeoJson.features[0].properties.osm_id, 10);
@@ -119,19 +119,45 @@ async function computeVoronoi(amenity) {
 				// superficie en metre carre
 				area = computePolygonArea(intersect_part[0])*1000*1000;
 			}
-			// on recupere l'objet geojson 
-			let interseect_zone = Object.assign({}, geo_json_intersect_polygon);
-			interseect_zone.features[0].properties = {"area": area};
-			interseect_zone.features[0].geometry.coordinates = intersect_part;
+			let interseect_zone = {"type": "FeatureCollection","features": [{"type": "Feature","geometry": {"type": "Polygon","coordinates": []},"properties": 0}]};						
 			
-			L.geoJson(interseect_zone, {style: style, onEachFeature: tagLayer}).addTo(map);
+			interseect_zone.features[0].properties = {"area": area, "amenity_coord" : zone.data};
+			interseect_zone.features[0].geometry.coordinates = intersect_part;
+			L.geoJson(interseect_zone, {style: style, onEachFeature: onEachFeature}).addTo(map);
 		}
     };
 }
 
-function tagLayer(feature, layer) {
+function onEachFeature(feature, layer) {
 	layer.myTag = "voronoi";
+    layer.on({
+        mouseover: highlightLocalAmenity,
+        mouseout: resetLocalAmenity
+    });
 }
+
+
+function highlightLocalAmenity(e){
+	let layer = e.target;
+	
+	let geojsonMarkerOptions = {radius: 4,fillColor: "#ff0000",color: "#000",weight: 1,opacity: 1,fillOpacity: 1};
+	
+	let amenity_point = {"type": "Feature","geometry": {"type": "Point","coordinates": layer.feature.properties.amenity_coord}};
+	L.geoJson(amenity_point, {
+    pointToLayer: function (feature, latlng) {
+        return L.circleMarker(latlng, geojsonMarkerOptions);
+    }, 
+	onEachFeature: function (feature, layer) {
+	        layer.myTag = "amenity_pt";
+	}}).addTo(map);
+}
+
+
+async function resetLocalAmenity(e){
+	await 	removeMarkers(map, "amenity_pt");
+}
+
+
 
 function style(feature) {
 	return {
@@ -155,10 +181,10 @@ function getColor(d) {
 	'#800026';
 };
 
-async function removeMarkers(map){
+async function removeMarkers(map, tag){
 	map.eachLayer( function(layer) {
 
-	  if ( layer.myTag &&  layer.myTag === "voronoi") {
+	  if ( layer.myTag &&  layer.myTag === tag) {
 		map.removeLayer(layer)
 	  }
 	});
@@ -213,7 +239,7 @@ async function showDataVoronoi(lat, lon) {
 	var command = L.control({position: 'topright'});
 	command.onAdd = function (map) {
     var div = L.DomUtil.create('div', 'command');
-    div.innerHTML += '<div style="text-align:center;"><span style="font-size:18px;">Points d\'intérêt</span><br/><span style="color:grey;font-size:14px;">(ville de '+cityname+')</span></div>';
+    div.innerHTML += '<div style="text-align:center;"><span style="font-size:18px;">Points d\'intérêt</span><br/><span style="color:grey;font-size:14px;">('+cityname+')</span></div>';
 	let amenity_option = '';
 	let selected = 'selected';
 	for (let amenity in elemDescr){
@@ -224,92 +250,7 @@ async function showDataVoronoi(lat, lon) {
     return div;
 	};
 	command.addTo(map);	
-
 	
 	let selected_amenity = document.getElementById('amenity-select').value;	
 	await computeVoronoi(selected_amenity);
-	
-	/*
-	// Recherche des elemnts dans cette zone
-	// 3600000000 : on ajoute pour avoir la "relation" correpondante
-    const area_id = 3600000000 + parseInt(cityGeoJson.features[0].properties.osm_id, 10);
-    const overpassApiUrl = 'https://lz4.overpass-api.de/api/interpreter?data=[out:json];area(' + area_id + ')->.searchArea;node['+ elemDescr["bicyleParking"]["code"] +'](area.searchArea);out;';
-
-    let responseOverpass = await fetch(overpassApiUrl);
-    let osmDataAsJson = await responseOverpass.json(); // read response body and parse as JSON
-	
-	// tranformation de la reponse en geojson
-    let elementData = osmtogeojson(osmDataAsJson);
-
-    // chargement des points et transformation du tableau en objet
-    var points = [];
-    for (let data_features of elementData.features) {
-        points.push(data_features.geometry.coordinates);
-    }
-
-    // Comme toujours avec D3JS lorsqu'un type de graphique a été intégré, il est très
-    // facile à mettre en oeuvre. la fonction voronoi appliquée sur la liste des points
-    // filtrés ajoutent pour chacun d'eux le polygone que l'on va représenter.
-    // on restreint les polygones sur la frontire francaise
-	let boundd3js = [[city.getBounds()._southWest.lng, city.getBounds()._southWest.lat], [city.getBounds()._northEast.lng, city.getBounds()._northEast.lat]];	
-	let voronoi = d3.voronoi().extent(boundd3js); // limite commune
-	
-    // on cree le diagramme de voronoi a partir des data
-    let voronoiPolygons = voronoi.polygons(points);
-
-	let cpt = 0;
-
-    // pour chaque polygone, on cree un geojson qu'on intégre dans la carte
-    for (let zone of voronoiPolygons) {
-        if (zone == undefined) {
-            continue;
-        }
-		// on cree des vrais polygones avec le premier et dernier elements egaux
-		zone.push(zone[0]);
-		// on calcule l'intersection de la zone avec celle de la commune entière
-		const intersect_arr = martinez.intersection(cityGeoJson.features[0].geometry.coordinates, [zone]);
-		
-		for (let intersect_part of intersect_arr)
-		{
-			// si l'element est dans la zone, on calcule son aire sinon, on met cette aire au max.
-			let area = 1e7;
-			if ( d3.polygonContains(intersect_part[0], zone.data)){
-				// superficie en metre carre
-				area = computePolygonArea(intersect_part[0])*1000*1000;
-			}
-			// on recupere l'objet geojson 
-			let interseect_zone = Object.assign({}, geo_json_intersect_polygon);
-			interseect_zone.features[0].properties = {"area": area};
-			interseect_zone.features[0].geometry.coordinates = intersect_part;
-			
-			L.geoJson(interseect_zone, {style: style, onEachFeature: tagLayer}).addTo(map);
-		}
-    };
-
-	function tagLayer(feature, layer) {
-		layer.myTag = "voronoi";
-	}
-
-    function style(feature) {
-        return {
-            fillColor: getColor(feature.properties.area),
-            weight: 1,
-            opacity: 1,
-            color: 'black',
-            dashArray: '3',
-            fillOpacity: 0.7
-        };
-    }
-	
-    function getColor(d) {
-        return d > 100000 ? '#FFEDA0' :
-        d > 40000 ? '#FED976' :
-        d > 20000 ? '#FEB24C' :
-        d > 8000 ? '#FD8D3C' :
-        d > 4000 ? '#FC4E2A' :
-        d > 2000 ? '#E31A1C' :
-        d > 1000 ? '#BD0026' :
-        '#800026';
-    };
-*/
 }
