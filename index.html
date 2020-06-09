@@ -1,0 +1,28 @@
+<!-- Based on https://www.datavis.fr/index.php?page=leaflet-cluster -->
+<html>
+	<head>
+        <meta charset="utf-8">
+        <!-- Nous chargeons les fichiers CDN de Leaflet. Le CSS AVANT le JS -->
+		<link rel="stylesheet" href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css"
+		  integrity="sha512-xwE/Az9zrjBIphAcBb3F6JVqxf46+CDLwfLMHloNu6KEQCAWi6HcDUbeOfBIptF7tcCzusKFjFw2yuvEpDL9wQ=="
+		  crossorigin=""/>
+	    <link rel="stylesheet" type="text/css" href="style.css">
+		
+		<script src="https://d3js.org/d3.v5.min.js"></script>
+		<script src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js"
+		  integrity="sha512-gZwIG9x3wUXg2hdXF6+rVkLF/0Vi9U8D2Ntg4Ga5I5BZpVkVxlJWbSQtXPSiUTtC0TjtGOmxa1AJPuV0CPthew=="
+		  crossorigin=""></script>
+		<!-- <script src='https://unpkg.com/@turf/turf/turf.min.js' crossorigin=""></script> -->
+		<script src='https://unpkg.com/martinez-polygon-clipping@0.7.0/dist/martinez.umd.js' crossorigin=""></script>
+		<script src="https://unpkg.com/osmtogeojson@2.2.12/osmtogeojson.js" crossorigin=""></script>
+		<script src="element.js"></script>
+		<script src="amenityVisu.js"></script>		
+	</head>
+	<!--<body onload="getLocation()"> -->
+	<body onload="initialize()">
+		<div id="map">
+			<!-- Ici s'affichera la carte
+			mais en attendant, on met un gif-->
+		</div>
+	</body>
+</html>
