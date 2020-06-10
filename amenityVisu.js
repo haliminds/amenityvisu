@@ -1,4 +1,6 @@
-// Based on https://www.datavis.fr/index.php?page=leaflet-cluster
+/*
+
+*/
 
 var map="";
 var cityGeoJson="";
@@ -99,8 +101,9 @@ async function computeVoronoi(amenity) {
     // on cree le diagramme de voronoi a partir des data
     let voronoiPolygons = voronoi.polygons(points);
 
-	let cpt = 0;
-
+	// simplify current geometry of city. error on intersection with large polygon.
+	var simplified = turf.simplify(turf.polygon(cityGeoJson.features[0].geometry.coordinates), {tolerance: 0.00005, highQuality: false});
+	
     // pour chaque polygone, on cree un geojson qu'on intégre dans la carte
     for (let zone of voronoiPolygons) {
         if (zone == undefined) {
@@ -108,9 +111,10 @@ async function computeVoronoi(amenity) {
         }
 		// on cree des vrais polygones avec le premier et dernier elements egaux
 		zone.push(zone[0]);
+
 		// on calcule l'intersection de la zone avec celle de la commune entière
-		const intersect_arr = martinez.intersection(cityGeoJson.features[0].geometry.coordinates, [zone]);
-		
+		const intersect_arr = martinez.intersection(simplified.geometry.coordinates, [zone]);
+
 		for (let intersect_part of intersect_arr)
 		{
 			// si l'element est dans la zone, on calcule son aire sinon, on met cette aire au max.
@@ -143,6 +147,7 @@ function highlightLocalAmenity(e){
 	let geojsonMarkerOptions = {radius: 4,fillColor: "#ff0000",color: "#000",weight: 1,opacity: 1,fillOpacity: 1};
 	
 	let amenity_point = {"type": "Feature","geometry": {"type": "Point","coordinates": layer.feature.properties.amenity_coord}};
+	//console.log(layer.feature.properties.area);
 	L.geoJson(amenity_point, {
     pointToLayer: function (feature, latlng) {
         return L.circleMarker(latlng, geojsonMarkerOptions);
