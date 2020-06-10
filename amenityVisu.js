@@ -101,8 +101,20 @@ async function computeVoronoi(amenity) {
     // on cree le diagramme de voronoi a partir des data
     let voronoiPolygons = voronoi.polygons(points);
 
-	// simplify current geometry of city. error on intersection with large polygon.
-	var simplified = turf.simplify(turf.polygon(cityGeoJson.features[0].geometry.coordinates), {tolerance: 0.00005, highQuality: false});
+	// simplify current geometry of city because error on intersection with large polygon.
+	// If many polygons, simplify each polygon and re-fill the citygeoJson
+	if (cityGeoJson.features[0].geometry.coordinates.length>1){
+		let city_part_id = 0
+		for (let coord of cityGeoJson.features[0].geometry.coordinates)
+		{
+			let simplified = turf.simplify(turf.polygon(coord), {tolerance: 0.00005, highQuality: false});	
+			cityGeoJson.features[0].geometry.coordinates[city_part_id++] = simplified.geometry.coordinates;
+		}		
+	}
+	else {
+		let simplified = turf.simplify(turf.polygon(cityGeoJson.features[0].geometry.coordinates), {tolerance: 0.00005, highQuality: false});
+		cityGeoJson.features[0].geometry.coordinates = simplified.geometry.coordinates;
+	}
 	
     // pour chaque polygone, on cree un geojson qu'on intégre dans la carte
     for (let zone of voronoiPolygons) {
@@ -113,7 +125,7 @@ async function computeVoronoi(amenity) {
 		zone.push(zone[0]);
 
 		// on calcule l'intersection de la zone avec celle de la commune entière
-		const intersect_arr = martinez.intersection(simplified.geometry.coordinates, [zone]);
+		const intersect_arr = martinez.intersection(cityGeoJson.features[0].geometry.coordinates, [zone]);
 
 		for (let intersect_part of intersect_arr)
 		{
