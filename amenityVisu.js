@@ -1,5 +1,5 @@
 /*
-
+	@author : Pierre Adam
 */
 
 var map="";
@@ -72,6 +72,8 @@ async function getCityByLatLng(lat, lon) {
 
 async function computeVoronoi(amenity) {
 	// clean all markers
+	let div_nbPOI = document.getElementById('nbPOI');	
+	div_nbPOI.innerHTML = "Calcul en cours";
 	await removeMarkers(map, "voronoi");
 	// Recherche des elemnts dans cette zone
 	// 3600000000 : on ajoute pour avoir la "relation" correpondante
@@ -89,6 +91,10 @@ async function computeVoronoi(amenity) {
     for (let data_features of elementData.features) {
         points.push(data_features.geometry.coordinates);
     }
+	
+	// Update command
+	const elemNbTxt = ((points.length>1) ? " éléments référencés)" : " élément référencé)");
+	div_nbPOI.innerHTML = "("+points.length + elemNbTxt;
 
 	let city = L.geoJson(cityGeoJson.features[0]);	
     // Comme toujours avec D3JS lorsqu'un type de graphique a été intégré, il est très
@@ -101,18 +107,19 @@ async function computeVoronoi(amenity) {
     // on cree le diagramme de voronoi a partir des data
     let voronoiPolygons = voronoi.polygons(points);
 
-	// simplify current geometry of city because error on intersection with large polygon.
+	// simplify current geometry of city because error on intersection with large polygon (parameter threshold fixed thanks to "Bastia" case)
 	// If many polygons, simplify each polygon and re-fill the citygeoJson
+	let optionSimplify = {tolerance: 0.00027, highQuality: false}
 	if (cityGeoJson.features[0].geometry.coordinates.length>1){
 		let city_part_id = 0
 		for (let coord of cityGeoJson.features[0].geometry.coordinates)
 		{
-			let simplified = turf.simplify(turf.polygon(coord), {tolerance: 0.00005, highQuality: false});	
+			let simplified = turf.simplify(turf.polygon(coord), optionSimplify);	
 			cityGeoJson.features[0].geometry.coordinates[city_part_id++] = simplified.geometry.coordinates;
 		}		
 	}
 	else {
-		let simplified = turf.simplify(turf.polygon(cityGeoJson.features[0].geometry.coordinates), {tolerance: 0.00005, highQuality: false});
+		let simplified = turf.simplify(turf.polygon(cityGeoJson.features[0].geometry.coordinates), optionSimplify);
 		cityGeoJson.features[0].geometry.coordinates = simplified.geometry.coordinates;
 	}
 	
@@ -171,7 +178,7 @@ function highlightLocalAmenity(e){
 
 
 async function resetLocalAmenity(e){
-	await 	removeMarkers(map, "amenity_pt");
+	await removeMarkers(map, "amenity_pt");
 }
 
 
@@ -264,6 +271,7 @@ async function showDataVoronoi(lat, lon) {
 		selected = selected = '';
 	}
 	div.innerHTML +='<div style="text-align:center;"><br/><select name="amenity" id="amenity-select" onchange="computeVoronoi(this.value)">' + amenity_option + '</select></div>';
+	div.innerHTML +='<div id="nbPOI" style="text-align:center;"></div>';
     return div;
 	};
 	command.addTo(map);	
