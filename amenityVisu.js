@@ -101,16 +101,20 @@ async function computeVoronoi(amenity) {
     // facile à mettre en oeuvre. la fonction voronoi appliquée sur la liste des points
     // filtrés ajoutent pour chacun d'eux le polygone que l'on va représenter.
     // on restreint les polygones sur la frontire francaise
-	let boundd3js = [[city.getBounds()._southWest.lng, city.getBounds()._southWest.lat], [city.getBounds()._northEast.lng, city.getBounds()._northEast.lat]];	
+	
+	// without margin, some points may be on city frontier and create an error for intersect algorithm
+	let margin = 1e-3;
+	let boundd3js = [[city.getBounds()._southWest.lng - margin, city.getBounds()._southWest.lat - margin], [city.getBounds()._northEast.lng + margin, city.getBounds()._northEast.lat + margin]];	
+	//console.log(boundd3js);
 	let voronoi = d3.voronoi().extent(boundd3js); // limite commune
 	
     // on cree le diagramme de voronoi a partir des data
     let voronoiPolygons = voronoi.polygons(points);
 
-	// simplify current geometry of city because error on intersection with large polygon (parameter threshold fixed thanks to "Bastia" case)
+	// simplify current geometry of city to speed up 
 	// If many polygons, simplify each polygon and re-fill the citygeoJson
-	let optionSimplify = {tolerance: 0.00027, highQuality: false}
-		
+	
+	let optionSimplify = {tolerance: 0.00005, highQuality: false}
 	if (cityGeoJson.features[0].geometry.coordinates.length>1){
 		let city_part_id = 0
 		for (let coord of cityGeoJson.features[0].geometry.coordinates)
@@ -125,7 +129,7 @@ async function computeVoronoi(amenity) {
 	}
 	
     // pour chaque polygone, on cree un geojson qu'on intégre dans la carte
-	//var t0 = performance.now()
+	var t0 = performance.now()
     for (let zone of voronoiPolygons) {
         if (zone == undefined) {
             continue;
@@ -171,8 +175,8 @@ async function computeVoronoi(amenity) {
 		}
     };
 	
-	//var t1 = performance.now()
-	//console.log("Call to compute polygon " + (t1 - t0) + " milliseconds.")
+	var t1 = performance.now()
+	console.log("Call to compute polygon " + (t1 - t0) + " milliseconds.")
 }
 
 function onEachFeature(feature, layer) {
