@@ -129,7 +129,7 @@ async function computeVoronoi(amenity) {
 	}
 	
     // pour chaque polygone, on cree un geojson qu'on intégre dans la carte
-	var t0 = performance.now()
+	//var t0 = performance.now()
     for (let zone of voronoiPolygons) {
         if (zone == undefined) {
             continue;
@@ -175,8 +175,8 @@ async function computeVoronoi(amenity) {
 		}
     };
 	
-	var t1 = performance.now()
-	console.log("Call to compute polygon " + (t1 - t0) + " milliseconds.")
+	//var t1 = performance.now()
+	//console.log("Call to compute polygon " + (t1 - t0) + " milliseconds.")
 }
 
 function onEachFeature(feature, layer) {
