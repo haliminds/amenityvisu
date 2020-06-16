@@ -1,10 +1,15 @@
-/*
-  @author : Pierre Adam
-*/
+/**
+ *
+ *
+ */
 
 var map = "";
 var cityGeoJson = "";
 
+/**
+ * [initialize description]
+ * @return {[type]} [description]
+ */
 function initialize() {
   // before showing the map, show a gif
   fillMapInnerHTML("<img src=\"loader.gif\" />");
@@ -32,13 +37,22 @@ function initialize() {
     // Fallback for no geolocation
     fillMapInnerHTML('<br><br>GPS non activé !');
   }
-
 }
 
+/**
+ * [fillMapInnerHTML description]
+ * @param  {[type]} htmlString [description]
+ * @return {[type]}            [description]
+ */
 function fillMapInnerHTML(htmlString) {
   document.getElementById('map').innerHTML = htmlString;
 }
 
+/**
+ * [computePolygonArea description]
+ * @param  {[type]} polygon [description]
+ * @return {[type]}         [description]
+ */
 function computePolygonArea(polygon) {
   let Ldeg = 40075 / 360;
   let centroid = d3.polygonCentroid(polygon)
@@ -46,6 +60,12 @@ function computePolygonArea(polygon) {
 }
 
 
+/**
+ * [getCityByLatLng description]
+ * @param  {[type]} lat [description]
+ * @param  {[type]} lon [description]
+ * @return {[type]}     [description]
+ */
 async function getCityByLatLng(lat, lon) {
   // appelle Nominatim pour savoir dans quelle commune on se trouve
   // On fait un 1er appel à du reverse et/ou un appel normal pour avoir l'osm_id et le geojson si le premier appel merde
@@ -70,7 +90,11 @@ async function getCityByLatLng(lat, lon) {
 }
 
 
-
+/**
+ * [computeVoronoi description]
+ * @param  {[type]} amenity [description]
+ * @return {[type]}         [description]
+ */
 async function computeVoronoi(amenity) {
   // clean all markers
   let div_nbPOI = document.getElementById('nbPOI');
@@ -79,7 +103,12 @@ async function computeVoronoi(amenity) {
   // Recherche des elemnts dans cette zone
   // 3600000000 : on ajoute pour avoir la "relation" correpondante
   const area_id = 3600000000 + parseInt(cityGeoJson.features[0].properties.osm_id, 10);
-  const overpassApiUrl = 'https://lz4.overpass-api.de/api/interpreter?data=[out:json];area(' + area_id + ')->.searchArea;node[' + elemDescr[amenity]["code"] + '](area.searchArea);out;';
+
+  let overpassAmenityList = '';
+  for (elem of elemDescr[amenity]["code"]) {
+    overpassAmenityList += 'node['+elem+'](area.searchArea);'
+  }
+  const overpassApiUrl = 'https://lz4.overpass-api.de/api/interpreter?data=[out:json];area(' + area_id + ')->.searchArea;'+overpassAmenityList+'out;';
 
   let responseOverpass = await fetch(overpassApiUrl);
   let osmDataAsJson = await responseOverpass.json(); // read response body and parse as JSON
@@ -114,24 +143,6 @@ async function computeVoronoi(amenity) {
 
   // on cree le diagramme de voronoi a partir des data
   let voronoiPolygons = voronoi.polygons(points);
-
-  /*
-  // simplify current geometry of city to speed up
-  // If many polygons, simplify each polygon and re-fill the citygeoJson
-  let optionSimplify = {tolerance: 0.00005, highQuality: false}
-  if (cityGeoJson.features[0].geometry.coordinates.length>1){
-  let city_part_id = 0
-  for (let coord of cityGeoJson.features[0].geometry.coordinates)
-  {
-  let simplified = turf.simplify(turf.polygon(coord), optionSimplify);
-  cityGeoJson.features[0].geometry.coordinates[city_part_id++] = simplified.geometry.coordinates;
-  }
-  }
-  else {
-  let simplified = turf.simplify(turf.polygon(cityGeoJson.features[0].geometry.coordinates), optionSimplify);
-  cityGeoJson.features[0].geometry.coordinates = simplified.geometry.coordinates;
-  }
-  */
 
   // pour chaque polygone, on cree un geojson qu'on intégre dans la carte
   //var t0 = performance.now()
@@ -192,16 +203,25 @@ async function computeVoronoi(amenity) {
   //console.log("Call to compute polygon " + (t1 - t0) + " milliseconds.")
 }
 
+/**
+ * [onEachFeature description]
+ * @param  {[type]} feature [description]
+ * @param  {[type]} layer   [description]
+ * @return {[type]}         [description]
+ */
 function onEachFeature(feature, layer) {
   layer.myTag = "voronoi";
   layer.on({
     mouseover: highlightLocalAmenity,
-    click: highlightLocalAmenity,
     mouseout: resetLocalAmenity
   });
 }
 
-
+/**
+ * [highlightLocalAmenity description]
+ * @param  {[type]} e [description]
+ * @return {[type]}   [description]
+ */
 function highlightLocalAmenity(e) {
   let layer = e.target;
   let geojsonMarkerOptions = {
@@ -230,11 +250,20 @@ function highlightLocalAmenity(e) {
 }
 
 
+/**
+ * [resetLocalAmenity description]
+ * @param {[type]} e [description]
+ */
 async function resetLocalAmenity(e) {
   await removeMarkers(map, "amenity_pt");
 }
 
 
+/**
+ * [style description]
+ * @param  {[type]} feature [description]
+ * @return {[type]}         [description]
+ */
 function style(feature) {
   return {
     fillColor: getColor(feature.properties.area),
@@ -246,6 +275,11 @@ function style(feature) {
   };
 }
 
+/**
+ * [getColor description]
+ * @param  {[type]} d [description]
+ * @return {[type]}   [description]
+ */
 function getColor(d) {
   return d > 100000 ? '#FFEDA0' :
     d > 40000 ? '#FED976' :
@@ -257,6 +291,12 @@ function getColor(d) {
     '#800026';
 };
 
+/**
+ * [removeMarkers description]
+ * @param  {[type]} map [description]
+ * @param  {[type]} tag [description]
+ * @return {[type]}     [description]
+ */
 async function removeMarkers(map, tag) {
   map.eachLayer(function(layer) {
 
@@ -266,7 +306,10 @@ async function removeMarkers(map, tag) {
   });
 };
 
-
+/**
+ * [simplifyCity description]
+ * @return {[type]} [description]
+ */
 async function simplifyCity() {
   // simplify current geometry of city to speed up
   // If many polygons, simplify each polygon and re-fill the citygeoJson
@@ -286,6 +329,12 @@ async function simplifyCity() {
   }
 }
 
+/**
+ * [showDataVoronoi description]
+ * @param  {[type]} lat [description]
+ * @param  {[type]} lon [description]
+ * @return {[type]}     [description]
+ */
 async function showDataVoronoi(lat, lon) {
   // Affiche la carte
   let stamenToner = L.tileLayer('http://stamen-tiles-{s}.a.ssl.fastly.net/toner/{z}/{x}/{y}.png', {
@@ -296,11 +345,11 @@ async function showDataVoronoi(lat, lon) {
     ext: 'png'
   });
 
+  // clear map and fill it
   fillMapInnerHTML('');
   map = new L.Map("map", {
     layers: [stamenToner]
   });
-
 
   // Get city geojson with lat / lon
   cityGeoJson = await getCityByLatLng(lat, lon);
@@ -347,7 +396,7 @@ async function showDataVoronoi(lat, lon) {
       amenity_option += '<option value="' + amenity + '" ' + selected + '>' + elemDescr[amenity].descr + '</option>';
       selected = '';
     }
-    div.innerHTML += '<div style="text-align:center;"><br/><select name="amenity" id="amenity-select" onchange="computeVoronoi(this.value)">' + amenity_option + '</select></div>';
+    div.innerHTML += '<div style="text-align:center;" class="form-group"><br/><select class="form-control" name="amenity" id="amenity-select" onchange="computeVoronoi(this.value)">' + amenity_option + '</select></div>';
     div.innerHTML += '<div id="nbPOI" style="text-align:center;"></div>';
     return div;
   };
