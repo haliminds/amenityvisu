@@ -49,22 +49,22 @@ function fillMapInnerHTML(htmlString) {
 }
 
 /**
- * [computePolygonArea description]
+ * Compute the area (in km²) of the input polygon
  * @param  {[type]} polygon [description]
  * @return {[type]}         [description]
  */
 function computePolygonArea(polygon) {
   let Ldeg = 40075 / 360;
-  let centroid = d3.polygonCentroid(polygon)
+  let centroid = d3.polygonCentroid(polygon);
   return Math.abs(Ldeg * Ldeg * Math.cos(centroid[1] * Math.PI / 180) * d3.polygonArea(polygon));
 }
 
 
 /**
- * [getCityByLatLng description]
- * @param  {[type]} lat [description]
- * @param  {[type]} lon [description]
- * @return {[type]}     [description]
+ * Get a city name from a latitude and a longitude
+ * @param  {[type]} lat input latitude
+ * @param  {[type]} lon input longitude
+ * @return {[type]} json response of nominatim api
  */
 async function getCityByLatLng(lat, lon) {
   // appelle Nominatim pour savoir dans quelle commune on se trouve
@@ -77,7 +77,7 @@ async function getCityByLatLng(lat, lon) {
   let cityname = nominatimGeoJson.features[0].properties.address.city || nominatimGeoJson.features[0].properties.address.municipality;
   // si ça pointe n'import où, ben tant pis !
   if (cityname == undefined) {
-    return null
+    return null;
   }
   // sinon, on cherche les infos sur la ville pointee
   if (nominatimGeoJson.features[0].geometry.type == "Point") {
@@ -100,16 +100,13 @@ async function computeVoronoi(amenity) {
   let div_nbPOI = document.getElementById('nbPOI');
   div_nbPOI.innerHTML = "Calcul en cours";
   await removeMarkers(map, "voronoi");
+
   // Recherche des elemnts dans cette zone
   // 3600000000 : on ajoute pour avoir la "relation" correpondante
   const area_id = 3600000000 + parseInt(cityGeoJson.features[0].properties.osm_id, 10);
-
   let overpassAmenityList = '';
-  for (elem of elemDescr[amenity]["code"]) {
-    overpassAmenityList += 'node['+elem+'](area.searchArea);'
-  }
+  elemDescr[amenity]["code"].forEach(elem => overpassAmenityList += 'node['+elem+'](area.searchArea);');
   const overpassApiUrl = 'https://lz4.overpass-api.de/api/interpreter?data=[out:json];area(' + area_id + ')->.searchArea;'+overpassAmenityList+'out;';
-
   let responseOverpass = await fetch(overpassApiUrl);
   let osmDataAsJson = await responseOverpass.json(); // read response body and parse as JSON
 
@@ -118,9 +115,7 @@ async function computeVoronoi(amenity) {
 
   // chargement des points et transformation du tableau en objet
   var points = [];
-  for (let data_features of elementData.features) {
-    points.push(data_features.geometry.coordinates);
-  }
+  elementData.features.forEach(elem => points.push(elem.geometry.coordinates));
 
   // Update command
   const elemNbTxt = ((points.length > 1) ? " éléments référencés)" : " élément référencé)");
@@ -138,9 +133,7 @@ async function computeVoronoi(amenity) {
     [city.getBounds()._southWest.lng - margin, city.getBounds()._southWest.lat - margin],
     [city.getBounds()._northEast.lng + margin, city.getBounds()._northEast.lat + margin]
   ];
-  //console.log(boundd3js);
   let voronoi = d3.voronoi().extent(boundd3js); // limite commune
-
   // on cree le diagramme de voronoi a partir des data
   let voronoiPolygons = voronoi.polygons(points);
 
@@ -301,7 +294,7 @@ async function removeMarkers(map, tag) {
   map.eachLayer(function(layer) {
 
     if (layer.myTag && layer.myTag === tag) {
-      map.removeLayer(layer)
+      map.removeLayer(layer);
     }
   });
 };
@@ -364,9 +357,7 @@ async function showDataVoronoi(lat, lon) {
   map.fitBounds(city.getBounds());
 
   // Ajout legende statique
-  let legend = L.control({
-    position: 'bottomright'
-  });
+  let legend = L.control({position: 'bottomright'});
   legend.onAdd = function(map) {
     let div = L.DomUtil.create('div', 'info legend'),
       grades = [0, 0.1, 0.2, 0.4, 0.8, 2, 4, 10];
@@ -391,10 +382,8 @@ async function showDataVoronoi(lat, lon) {
     var div = L.DomUtil.create('div', 'command');
     div.innerHTML += '<div style="text-align:center;"><span style="font-size:18px;">Points d\'intérêt</span><br/><span style="color:grey;font-size:14px;">(' + cityname + ')</span></div>';
     let amenity_option = '';
-    let selected = 'selected';
     for (let amenity in elemDescr) {
-      amenity_option += '<option value="' + amenity + '" ' + selected + '>' + elemDescr[amenity].descr + '</option>';
-      selected = '';
+      amenity_option += '<option value="' + amenity + '">' + elemDescr[amenity].descr + '</option>';
     }
     div.innerHTML += '<div style="text-align:center;" class="form-group"><br/><select class="form-control" name="amenity" id="amenity-select" onchange="computeVoronoi(this.value)">' + amenity_option + '</select></div>';
     div.innerHTML += '<div id="nbPOI" style="text-align:center;"></div>';
