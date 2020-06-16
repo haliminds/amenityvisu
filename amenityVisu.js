@@ -337,7 +337,7 @@ async function simplifyCity() {
  */
 async function showDataVoronoi(lat, lon) {
   // Affiche la carte
-  let stamenToner = L.tileLayer('http://stamen-tiles-{s}.a.ssl.fastly.net/toner/{z}/{x}/{y}.png', {
+  let stamenToner = L.tileLayer('https://stamen-tiles-{s}.a.ssl.fastly.net/toner/{z}/{x}/{y}.png', {
     attribution: 'Map tiles by Stamen Design, CC BY 3.0 - Map data © OpenStreetMap',
     subdomains: 'abcd',
     minZoom: 10,
