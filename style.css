@@ -1,8 +1,10 @@
-#map{ /* la carte DOIT avoir une hauteur sinon elle n'apparaît pas */
-	height:100%;
-	position:fixed;
-	width:100%;
-	margin-bottom:10px
+body {
+    padding: 0;
+    margin: 0;
+}
+html, body, #map {
+    height: 100%;
+    width: 100vw;
 }
 
 img {
@@ -46,6 +48,20 @@ img {
     box-shadow: 0 0 15px rgba(0,0,0,0.2);
     border-radius: 5px;
     min-width: 200px;
+		min-height:100px;
+}
+
+.command-text {
+		text-align: center;
+}
+
+.command-span-title {
+	font-size: 18px;
+}
+
+.command-span-city {
+	color:grey;
+	font-size:14px;
 }
 
 #nbPOI {

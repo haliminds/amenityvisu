@@ -6,6 +6,8 @@
 var map = "";
 var cityGeoJson = "";
 
+
+
 /**
  * [initialize description]
  * @return {[type]} [description]
@@ -97,8 +99,10 @@ async function getCityByLatLng(lat, lon) {
  */
 async function computeVoronoi(amenity) {
   // clean all markers
+
   let div_nbPOI = document.getElementById('nbPOI');
   div_nbPOI.innerHTML = "Calcul en cours";
+
   await removeMarkers(map, "voronoi");
 
   // Recherche des elemnts dans cette zone
@@ -374,19 +378,45 @@ async function showDataVoronoi(lat, lon) {
 
   // Ajout d'un paneau de commande
   let cityname = cityGeoJson.features[0].properties.address.city || cityGeoJson.features[0].properties.address.municipality;
+/*
+  var select = L.amenitySelect();
+	select.addTo(map);
+	select.on('change', function(e){
+		if (e.amenity === undefined){ //Do nothing on title
+			return;
+		}
+		computeVoronoi(e.amenity);
 
+	});
+  let selected_amenity = 'bicyleParking';
+*/
   var command = L.control({
     position: 'topright'
   });
   command.onAdd = function(map) {
-    var div = L.DomUtil.create('div', 'command');
-    div.innerHTML += '<div style="text-align:center;"><span style="font-size:18px;">Points d\'intérêt</span><br/><span style="color:grey;font-size:14px;">(' + cityname + ')</span></div>';
+    let div = L.DomUtil.create('div', 'command');
+    let divHead = L.DomUtil.create('div', 'command-text', div);
+    let spanTitle = L.DomUtil.create('div', 'command-span-title', divHead);
+    spanTitle.innerHTML = "Points d\'intérêt<br/>";
+    let spanCity = L.DomUtil.create('div', 'command-span-city', divHead);
+    spanCity.innerHTML = '(' + cityname + ')';
+
     let amenity_option = '';
     for (let amenity in elemDescr) {
       amenity_option += '<option value="' + amenity + '">' + elemDescr[amenity].descr + '</option>';
     }
-    div.innerHTML += '<div style="text-align:center;" class="form-group"><br/><select class="form-control" name="amenity" id="amenity-select" onchange="computeVoronoi(this.value)">' + amenity_option + '</select></div>';
-    div.innerHTML += '<div id="nbPOI" style="text-align:center;"></div>';
+    let divForm = L.DomUtil.create('div', 'form-group command-text', div);
+
+    /*let select = L.DomUtil.create('select', 'form-control', div);
+    select.id = "amenity-select";
+    select.onchange = computeVoronoi(select.options[select.selectedIndex].value);
+    select.setAttribute('data-tap-disabled', "True");
+    select.innerHTML = amenity_option;*/
+    divForm.innerHTML += '<br/><select class="form-control"  id="amenity-select" onchange="computeVoronoi(this.value)" data-tap-disabled="true">' + amenity_option + '</select>';
+
+    let divPOI = L.DomUtil.create('div', 'command-text', div);
+    divPOI.id = "nbPOI"
+
     return div;
   };
   command.addTo(map);
