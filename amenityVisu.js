@@ -6,13 +6,12 @@
 var map = "";
 var cityGeoJson = "";
 
-
-
 /**
  * [initialize description]
  * @return {[type]} [description]
  */
 function initialize() {
+  createSideBar();
   // before showing the map, show a gif
   fillMapInnerHTML("<img src=\"loader.gif\" />");
 
@@ -29,6 +28,7 @@ function initialize() {
 
       let lat_pos = position.coords.latitude;
       let lon_pos = position.coords.longitude;
+
       showDataVoronoi(lat_pos, lon_pos);
 
     }, function(error) {
@@ -44,7 +44,6 @@ function initialize() {
 /**
  * [fillMapInnerHTML description]
  * @param  {[type]} htmlString [description]
- * @return {[type]}            [description]
  */
 function fillMapInnerHTML(htmlString) {
   document.getElementById('map').innerHTML = htmlString;
@@ -52,7 +51,7 @@ function fillMapInnerHTML(htmlString) {
 
 /**
  * Compute the area (in km²) of the input polygon
- * @param  {[type]} polygon [description]
+ * @param  {Array} polygon [description]
  * @return {[type]}         [description]
  */
 function computePolygonArea(polygon) {
@@ -64,8 +63,8 @@ function computePolygonArea(polygon) {
 
 /**
  * Get a city name from a latitude and a longitude
- * @param  {[type]} lat input latitude
- * @param  {[type]} lon input longitude
+ * @param  {float} lat input latitude
+ * @param  {float} lon input longitude
  * @return {[type]} json response of nominatim api
  */
 async function getCityByLatLng(lat, lon) {
@@ -332,7 +331,7 @@ async function simplifyCity() {
  * @param  {[type]} lon [description]
  * @return {[type]}     [description]
  */
-async function showDataVoronoi(lat, lon) {
+async function createCityAndMenu(lat, lon) {
   // Affiche la carte
   let stamenToner = L.tileLayer('https://stamen-tiles-{s}.a.ssl.fastly.net/toner/{z}/{x}/{y}.png', {
     attribution: 'Map tiles by Stamen Design, CC BY 3.0 - Map data © OpenStreetMap',
@@ -378,50 +377,56 @@ async function showDataVoronoi(lat, lon) {
 
   // Ajout d'un paneau de commande
   let cityname = cityGeoJson.features[0].properties.address.city || cityGeoJson.features[0].properties.address.municipality;
-/*
-  var select = L.amenitySelect();
-	select.addTo(map);
-	select.on('change', function(e){
-		if (e.amenity === undefined){ //Do nothing on title
-			return;
-		}
-		computeVoronoi(e.amenity);
-
-	});
-  let selected_amenity = 'bicyleParking';
-*/
   var command = L.control({
     position: 'topright'
   });
   command.onAdd = function(map) {
     let div = L.DomUtil.create('div', 'command');
     let divHead = L.DomUtil.create('div', 'command-text', div);
-    let spanTitle = L.DomUtil.create('div', 'command-span-title', divHead);
+    let spanTitle = L.DomUtil.create('span', 'command-span-title', divHead);
     spanTitle.innerHTML = "Points d\'intérêt<br/>";
-    let spanCity = L.DomUtil.create('div', 'command-span-city', divHead);
+    let spanCity = L.DomUtil.create('span', 'command-span-city', divHead);
     spanCity.innerHTML = '(' + cityname + ')';
 
-    let amenity_option = '';
-    for (let amenity in elemDescr) {
-      amenity_option += '<option value="' + amenity + '">' + elemDescr[amenity].descr + '</option>';
-    }
-    let divForm = L.DomUtil.create('div', 'form-group command-text', div);
-
-    /*let select = L.DomUtil.create('select', 'form-control', div);
-    select.id = "amenity-select";
-    select.onchange = computeVoronoi(select.options[select.selectedIndex].value);
-    select.setAttribute('data-tap-disabled', "True");
-    select.innerHTML = amenity_option;*/
-    divForm.innerHTML += '<br/><select class="form-control"  id="amenity-select" onchange="computeVoronoi(this.value)" data-tap-disabled="true">' + amenity_option + '</select>';
+    let divAmenityType = L.DomUtil.create('div', 'command-text', div);
+    divAmenityType.id = 'amenity-text';
+    let selected_amenity=getCurrentAmenity();
+    divAmenityType.innerHTML = elemDescr[selected_amenity].descr;
 
     let divPOI = L.DomUtil.create('div', 'command-text', div);
     divPOI.id = "nbPOI"
-
     return div;
   };
   command.addTo(map);
 
-  let selected_amenity = document.getElementById('amenity-select').value;
+  var sidebar = L.control
+    .sidebar({ container: "sidebar", position: "left" })
+    .addTo(map);
+}
+
+
+function getCurrentAmenity() {
+  let radioboxes = document.getElementsByName("amenity-radio");
+  let selected_amenity='';
+  radioboxes.forEach( radio => {if(radio.checked){selected_amenity=radio.value}});
+  return selected_amenity;
+}
+
+
+/**
+ * [showDataVoronoi description]
+ * @param  {[type]} lat [description]
+ * @param  {[type]} lon [description]
+ * @return {[type]}     [description]
+ */
+async function showDataVoronoi(lat, lon) {
+  // Create map and menu
+  await createCityAndMenu(lat, lon);
+  // get amenity select and compute voronoi representation
+  //let selected_amenity = document.getElementById('amenity-select').value;
+  let radioboxes = document.getElementsByName("amenity-radio");
+  let selected_amenity=getCurrentAmenity();
+  //radioboxes.forEach( radio => {if(radio.checked){selected_amenity=radio.value}});
   await simplifyCity();
   await computeVoronoi(selected_amenity);
 }

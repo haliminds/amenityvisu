@@ -48,7 +48,6 @@ img {
     box-shadow: 0 0 15px rgba(0,0,0,0.2);
     border-radius: 5px;
     min-width: 200px;
-		min-height:100px;
 }
 
 .command-text {
@@ -56,7 +55,7 @@ img {
 }
 
 .command-span-title {
-	font-size: 18px;
+	font-size: 20px;
 }
 
 .command-span-city {
@@ -65,12 +64,17 @@ img {
 }
 
 #nbPOI {
-	margin-top:10px;
+	margin-top:6px;
 	color:grey;
 	font-size:14px;
 }
 
-select {
-    font-size: .9rem;
-    padding: 2px 5px;
+#amenity-text {
+  margin-top:10px;
+  font-size:16px;
+}
+
+.lorem {
+	font-style: italic;
+	color: #aaa;
 }
