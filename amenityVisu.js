@@ -101,6 +101,9 @@ async function computeVoronoi(amenity) {
 
   let div_nbPOI = document.getElementById('nbPOI');
   div_nbPOI.innerHTML = "Calcul en cours";
+  
+  let div_amenity_txt = document.getElementById('amenity-text');
+  div_amenity_txt.innerHTML = elemDescr[amenity].descr;
 
   await removeMarkers(map, "voronoi");
 
