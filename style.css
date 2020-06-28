@@ -1,3 +1,4 @@
+/* For all devices: */
 body {
     padding: 0;
     margin: 0;
@@ -7,74 +8,128 @@ html, body, #map {
     width: 100vw;
 }
 
+
+
 img {
 	display: block;
 	margin-left: auto;
 	margin-right: auto;
 }
 
-.info {
-    padding: 6px 8px;
-    font: 14px/16px Arial, Helvetica, sans-serif;
-    background: white;
-    background: rgba(255,255,255,0.8);
-    box-shadow: 0 0 15px rgba(0,0,0,0.2);
-    border-radius: 5px;
-}
-
-.info h5 {
-    margin: 0 0 5px;
-    color: #777;
-}
-
-.legend {
-    line-height: 18px;
-    color: #555;
-}
-
-.legend i {
-   	width: 18px;
-   	height: 18px;
-   	float: left;
-   	margin-right: 8px;
-   	opacity: 0.7;
-}
-
-.command {
-    padding: 4px 6px;
-    background: white;
-    font: 14px/16px Arial, Helvetica, sans-serif;
-    background: rgba(255,255,255,0.8);
-    box-shadow: 0 0 15px rgba(0,0,0,0.2);
-    border-radius: 5px;
-    min-width: 200px;
-}
-
-.command-text {
-		text-align: center;
-}
-
-.command-span-title {
-	font-size: 20px;
-}
-
-.command-span-city {
-	color:grey;
-	font-size:14px;
-}
-
-#nbPOI {
-	margin-top:6px;
-	color:grey;
-	font-size:14px;
-}
-
-#amenity-text {
-  margin-top:10px;
-  font-size:16px;
-}
 
 .lorem {
 	font-style: italic;
 	color: #aaa;
+}
+
+/* For mobile phones: */
+.legend {
+    background: rgba(255,255,255,0.8);
+    padding: 2px 4px;
+    font: 10px/12px Arial, Helvetica, sans-serif;
+    border-radius: 5px;
+}
+
+.legend h6 {
+    margin-top: 2px;
+    margin-bottom: 2px;
+}
+
+.legend i {
+   	width: 10px;
+   	height: 10px;
+   	float: left;
+   	margin-right: 4px;
+   	opacity: 0.7;
+}
+
+.command {
+    padding: 2px 4px;
+    background: white;
+    font: 10px/12px Arial, Helvetica, sans-serif;
+    font-size:10px;
+    background: rgba(255,255,255,0.8);
+    border-radius: 5px;
+    min-width: 10%;
+    text-align: center;
+}
+
+.command-span-nbPOI {
+		color:grey;
+    margin-top:2px;
+}
+
+.command-span-type {
+    margin-top:6px;
+}
+
+.command-span-city {
+	color:grey;
+}
+
+.command-span-title {
+  font-size: 12px;
+}
+
+.leaflet-container .leaflet-control-attribution {
+  padding: 2px 4px;
+  font-size:8px;
+  }
+
+
+/* For Desktop: */
+@media only screen and (min-width: 768px) {
+
+  .legend {
+    background: rgba(255,255,255,0.8);
+    padding: 6px 8px;
+    font: 16px/18px Arial, Helvetica, sans-serif;
+    border-radius: 5px;
+  }
+
+  .legend i {
+     	width: 18px;
+     	height: 18px;
+     	float: left;
+     	margin-right: 8px;
+     	opacity: 0.7;
+  }
+
+  .command {
+      padding: 4px 6px;
+      background: white;
+      font: 14px/16px Arial, Helvetica, sans-serif;
+      background: rgba(255,255,255,0.8);
+      box-shadow: 0 0 15px rgba(0,0,0,0.2);
+      border-radius: 5px;
+      min-width: 200px;
+  }
+
+  .command-text {
+  		text-align: center;
+  }
+
+  .command-span-title {
+  	font-size: 20px;
+  }
+
+  .command-span-city {
+  	color:grey;
+  	font-size:14px;
+  }
+
+  .command-span-nbPOI {
+  		color:grey;
+      margin-top:6px;
+  }
+
+  .command-span-type {
+      margin-top:10px;
+  }
+
+  .leaflet-container .leaflet-control-attribution {
+    padding: 4px 6px;
+    font-size:12px;
+    }
+
 }

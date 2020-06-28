@@ -362,14 +362,14 @@ async function createCityAndMenu(lat, lon) {
   // Ajout legende statique
   let legend = L.control({position: 'bottomright'});
   legend.onAdd = function(map) {
-    let div = L.DomUtil.create('div', 'info legend'),
-      grades = [0, 0.1, 0.2, 0.4, 0.8, 2, 4, 10];
+    let div = L.DomUtil.create('div', 'legend'),
+      grades = ['0.0', '0.1', '0.2', '0.4', '0.8', '2.0', '4.0', '10'];
 
     div.innerHTML += '<h6>En ha</h6>';
     for (let i = 0; i < grades.length; i++) {
       div.innerHTML +=
-        '<i style="background:' + getColor(grades[i] * 10000 + 1) + '"></i> ' +
-        grades[i] + (grades[i + 1] ? 'ha – ' + grades[i + 1] + 'ha <br>' : '+');
+        '<i style="background:' + getColor(parseFloat(grades[i]) * 10000 + 1) + '"></i> ' +
+        grades[i] + (grades[i + 1] ? ' – ' + grades[i + 1] + '<br>' : '+');
     }
     return div;
   };
@@ -388,12 +388,12 @@ async function createCityAndMenu(lat, lon) {
     let spanCity = L.DomUtil.create('span', 'command-span-city', divHead);
     spanCity.innerHTML = '(' + cityname + ')';
 
-    let divAmenityType = L.DomUtil.create('div', 'command-text', div);
+    let divAmenityType = L.DomUtil.create('div', 'command-span-type', div);
     divAmenityType.id = 'amenity-text';
     let selected_amenity=getCurrentAmenity();
     divAmenityType.innerHTML = elemDescr[selected_amenity].descr;
 
-    let divPOI = L.DomUtil.create('div', 'command-text', div);
+    let divPOI = L.DomUtil.create('div', 'command-span-nbPOI', div);
     divPOI.id = "nbPOI"
     return div;
   };
