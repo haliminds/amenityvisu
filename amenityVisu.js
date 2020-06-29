@@ -6,6 +6,7 @@
 var map = "";
 var cityGeoJson = "";
 
+
 /**
  * [initialize description]
  * @return {[type]} [description]
@@ -101,11 +102,12 @@ async function computeVoronoi(amenity) {
 
   let div_nbPOI = document.getElementById('nbPOI');
   div_nbPOI.innerHTML = "Calcul en cours";
-  
+
   let div_amenity_txt = document.getElementById('amenity-text');
   div_amenity_txt.innerHTML = elemDescr[amenity].descr;
 
   await removeMarkers(map, "voronoi");
+  await removeMarkers(map, "amenity_pt");
 
   // Recherche des elemnts dans cette zone
   // 3600000000 : on ajoute pour avoir la "relation" correpondante
@@ -171,6 +173,16 @@ async function computeVoronoi(amenity) {
       [zone]
     ] : martinez.intersection(cityGeoJson.features[0].geometry.coordinates, [zone]));
 
+    // Pour chaque zone, on affiche la zone ainsi que le seed de la zone
+    let geojsonMarkerOptions = {
+      radius: 3,
+      fillColor: "#ff0000",
+      color: "#000",
+      weight: 1,
+      opacity: 1,
+      fillOpacity: 1
+    };
+
     for (let intersect_part of intersect_arr) {
       // si l'element est dans la zone, on calcule son aire sinon, on met cette aire au max.
       let area = ((d3.polygonContains(intersect_part[0], zone.data)) ? computePolygonArea(intersect_part[0]) * 1000 * 1000 : 1e7);
@@ -178,6 +190,7 @@ async function computeVoronoi(amenity) {
         "type": "FeatureCollection",
         "features": [{
           "type": "Feature",
+          "tag" : "voronoi",
           "geometry": {
             "type": "Polygon",
             "coordinates": []
@@ -192,9 +205,25 @@ async function computeVoronoi(amenity) {
       };
       interseect_zone.features[0].geometry.coordinates = intersect_part;
       L.geoJson(interseect_zone, {
-        style: style,
-        onEachFeature: onEachFeature
+        style: quadrangleStyle,
+        //onEachFeature: onEachFeature
       }).addTo(map);
+
+      //
+      let amenity_point = {
+         "type": "Feature",
+         "tag" : "amenity_pt",
+         "geometry": {
+           "type": "Point",
+           "coordinates": zone.data
+         }
+       };
+       L.geoJson(amenity_point, {
+         pointToLayer: function(feature, latlng) {
+           return L.circleMarker(latlng, geojsonMarkerOptions);
+         }
+       }).addTo(map);
+
     }
   };
 
@@ -202,68 +231,13 @@ async function computeVoronoi(amenity) {
   //console.log("Call to compute polygon " + (t1 - t0) + " milliseconds.")
 }
 
-/**
- * [onEachFeature description]
- * @param  {[type]} feature [description]
- * @param  {[type]} layer   [description]
- * @return {[type]}         [description]
- */
-function onEachFeature(feature, layer) {
-  layer.myTag = "voronoi";
-  layer.on({
-    mouseover: highlightLocalAmenity,
-    mouseout: resetLocalAmenity
-  });
-}
 
 /**
- * [highlightLocalAmenity description]
- * @param  {[type]} e [description]
- * @return {[type]}   [description]
- */
-function highlightLocalAmenity(e) {
-  let layer = e.target;
-  let geojsonMarkerOptions = {
-    radius: 4,
-    fillColor: "#ff0000",
-    color: "#000",
-    weight: 1,
-    opacity: 1,
-    fillOpacity: 1
-  };
-  let amenity_point = {
-    "type": "Feature",
-    "geometry": {
-      "type": "Point",
-      "coordinates": layer.feature.properties.amenity_coord
-    }
-  };
-  L.geoJson(amenity_point, {
-    pointToLayer: function(feature, latlng) {
-      return L.circleMarker(latlng, geojsonMarkerOptions);
-    },
-    onEachFeature: function(feature, layer) {
-      layer.myTag = "amenity_pt";
-    }
-  }).addTo(map);
-}
-
-
-/**
- * [resetLocalAmenity description]
- * @param {[type]} e [description]
- */
-async function resetLocalAmenity(e) {
-  await removeMarkers(map, "amenity_pt");
-}
-
-
-/**
- * [style description]
+ * [quadrangleStyle description]
  * @param  {[type]} feature [description]
  * @return {[type]}         [description]
  */
-function style(feature) {
+function quadrangleStyle(feature) {
   return {
     fillColor: getColor(feature.properties.area),
     weight: 1,
@@ -280,14 +254,14 @@ function style(feature) {
  * @return {[type]}   [description]
  */
 function getColor(d) {
-  return d > 100000 ? '#FFEDA0' :
-    d > 40000 ? '#FED976' :
-    d > 20000 ? '#FEB24C' :
-    d > 8000 ? '#FD8D3C' :
-    d > 4000 ? '#FC4E2A' :
-    d > 2000 ? '#E31A1C' :
-    d > 1000 ? '#BD0026' :
-    '#800026';
+  return d > 100000 ? '#4575b4' :
+    d > 40000 ? '#74add1' :
+    d > 20000 ? '#abd9e9' :
+    d > 8000 ? '#e0f3f8' :
+    d > 4000 ? '#fee090' :
+    d > 2000 ? '#fdae61' :
+    d > 1000 ? '#f46d43' :
+    '#d73027';
 };
 
 /**
@@ -298,6 +272,9 @@ function getColor(d) {
  */
 async function removeMarkers(map, tag) {
   map.eachLayer(function(layer) {
+    if (layer.feature && layer.feature.tag && layer.feature.tag === tag) {
+      map.removeLayer(layer);
+    }
 
     if (layer.myTag && layer.myTag === tag) {
       map.removeLayer(layer);
@@ -343,6 +320,7 @@ async function createCityAndMenu(lat, lon) {
     maxZoom: 20,
     ext: 'png'
   });
+
 
   // clear map and fill it
   fillMapInnerHTML('');
@@ -405,9 +383,16 @@ async function createCityAndMenu(lat, lon) {
   var sidebar = L.control
     .sidebar({ container: "sidebar", position: "left" })
     .addTo(map);
+
+  map.on('click', function () {
+              sidebar.close();
+          })
 }
 
-
+/**
+ * [getCurrentAmenity description]
+ * @return {[type]} [description]
+ */
 function getCurrentAmenity() {
   let radioboxes = document.getElementsByName("amenity-radio");
   let selected_amenity='';

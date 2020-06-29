@@ -18,6 +18,10 @@ const elemDescr = {
 	"cafeBar" : {
 		"descr": "Café / Bar",
 		"code": ["amenity=cafe", "amenity=bar"]
+	},
+	"surveillance" : {
+		"descr": "Caméra de surveillance",
+		"code": ["man_made=surveillance"]
 	}
 };
 
@@ -63,48 +67,4 @@ function createSideBar() {
   </form>';
 
 
-
-
-  // create content
-  /*
-  let div_content = L.DomUtil.create('div', 'sb_content', div_sidebar);
-  div_content.className = 'leaflet-sidebar-content';
-  // HOME
-  let div_content_home = L.DomUtil.create('div', 'home', div_content);
-  div_content_home.className = 'leaflet-sidebar-pane';
-  div_content_home.innerHTML += '<h1 class="leaflet-sidebar-header">Amenity Visu<span class="leaflet-sidebar-close"><i class="fa fa-caret-left"></i></span></h1>';
-  div_content_home.innerHTML += '<p>A responsive sidebar for mapping libraries like<a href="https://leafletjs.com/">Leaflet</a>.</p>'
-
-  let lorem_ipsum = 'Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam \
-  nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam \
-  erat, sed diam voluptua. At vero eos et accusam et justo duo dolores \
-  et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est \
-  Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur \
-  sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore \
-  et dolore magna aliquyam erat, sed diam voluptua. At vero eos et \
-  accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, \
-  no sea takimata sanctus est Lorem ipsum dolor sit amet.';
-
-  div_content_home.innerHTML += '<p class="lorem">'+lorem_ipsum+'</p>'
-  div_content_home.innerHTML += '<p class="lorem">'+lorem_ipsum+'</p>'
-  div_content_home.innerHTML += '<p class="lorem">'+lorem_ipsum+'</p>'
-  div_content_home.innerHTML += '<p class="lorem">'+lorem_ipsum+'</p>'
-
-  // OTHER
-  let div_content_amenity = L.DomUtil.create('div', 'sb_content_amenity', div_content);
-  div_content_amenity.className = 'leaflet-sidebar-pane';
-  div_content_amenity.innerHTML += '<h1 class="leaflet-sidebar-header">Messages<span class="leaflet-sidebar-close"><i class="fa fa-caret-left"></i></span></h1>';
-  div_content_amenity.innerHTML += ' \
-    <form> \
-      <fieldset id="amenity_choice"> \
-        <legend>Choose your favorite monster</legend> \
-        <input type="radio" id="kraken" name="monster" onchange="handleClick(this);"> \
-        <label for="kraken">Kraken</label><br /> \
-        <input type="radio" id="sasquatch" name="monster" onchange="handleClick(this);"> \
-        <label for="sasquatch">Sasquatch</label><br /> \
-        <input type="radio" id="mothman" name="monster" onchange="handleClick(this);"> \
-        <label for="mothman">Mothman</label> \
-      </fieldset>\
-    </form>';
-    */
 }
