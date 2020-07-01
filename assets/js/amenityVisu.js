@@ -11,10 +11,10 @@ var cityGeoJson = "";
  * [initialize description]
  * @return {[type]} [description]
  */
-function initialize() {
+function initialize(loaderGif) {
   createSideBar();
   // before showing the map, show a gif
-  fillMapInnerHTML("<img src=\"loader.gif\" />");
+  fillMapInnerHTML("<img src=\"" + loaderGif + "\"/>");
 
   if (navigator.geolocation) {
     let location_timeout = setTimeout("fillMapInnerHTML('<br><br>GPS non activé !')", 5000);
@@ -113,8 +113,8 @@ async function computeVoronoi(amenity) {
   // 3600000000 : on ajoute pour avoir la "relation" correpondante
   const area_id = 3600000000 + parseInt(cityGeoJson.features[0].properties.osm_id, 10);
   let overpassAmenityList = '';
-  elemDescr[amenity]["code"].forEach(elem => overpassAmenityList += 'node['+elem+'](area.searchArea);');
-  const overpassApiUrl = 'https://lz4.overpass-api.de/api/interpreter?data=[out:json];area(' + area_id + ')->.searchArea;'+overpassAmenityList+'out;';
+  elemDescr[amenity]["code"].forEach(elem => overpassAmenityList += 'node[' + elem + '](area.searchArea);');
+  const overpassApiUrl = 'https://lz4.overpass-api.de/api/interpreter?data=[out:json];area(' + area_id + ')->.searchArea;' + overpassAmenityList + 'out;';
   let responseOverpass = await fetch(overpassApiUrl);
   let osmDataAsJson = await responseOverpass.json(); // read response body and parse as JSON
 
@@ -190,7 +190,7 @@ async function computeVoronoi(amenity) {
         "type": "FeatureCollection",
         "features": [{
           "type": "Feature",
-          "tag" : "voronoi",
+          "tag": "voronoi",
           "geometry": {
             "type": "Polygon",
             "coordinates": []
@@ -211,24 +211,24 @@ async function computeVoronoi(amenity) {
 
       //
       let amenity_point = {
-         "type": "Feature",
-         "tag" : "amenity_pt",
-         "geometry": {
-           "type": "Point",
-           "coordinates": zone.data
-         }
-       };
-       L.geoJson(amenity_point, {
-         pointToLayer: function(feature, latlng) {
-           return L.circleMarker(latlng, geojsonMarkerOptions);
-         }
-       }).addTo(map);
+        "type": "Feature",
+        "tag": "amenity_pt",
+        "geometry": {
+          "type": "Point",
+          "coordinates": zone.data
+        }
+      };
+      L.geoJson(amenity_point, {
+        pointToLayer: function(feature, latlng) {
+          return L.circleMarker(latlng, geojsonMarkerOptions);
+        }
+      }).addTo(map);
 
     }
   };
 
-  //var t1 = performance.now()
-  //console.log("Call to compute polygon " + (t1 - t0) + " milliseconds.")
+  /*var t1 = performance.now()
+  console.log("Call to compute polygon " + (t1 - t0) + " milliseconds.")*/
 }
 
 
@@ -282,6 +282,7 @@ async function removeMarkers(map, tag) {
   });
 };
 
+
 /**
  * [simplifyCity description]
  * @return {[type]} [description]
@@ -293,17 +294,19 @@ async function simplifyCity() {
     tolerance: 0.00005,
     highQuality: false
   }
+  // if multipolygon, simplify each polygon
   if (cityGeoJson.features[0].geometry.coordinates.length > 1) {
     let city_part_id = 0
     for (let coord of cityGeoJson.features[0].geometry.coordinates) {
-      let simplified = turf.simplify(turf.polygon(coord), optionSimplify);
-      cityGeoJson.features[0].geometry.coordinates[city_part_id++] = simplified.geometry.coordinates;
+      let simplified = simplify(coord, optionSimplify);
+      cityGeoJson.features[0].geometry.coordinates[city_part_id++] = simplified;
     }
   } else {
-    let simplified = turf.simplify(turf.polygon(cityGeoJson.features[0].geometry.coordinates), optionSimplify);
-    cityGeoJson.features[0].geometry.coordinates = simplified.geometry.coordinates;
+    let simplified = simplify(cityGeoJson.features[0].geometry.coordinates, optionSimplify);
+    cityGeoJson.features[0].geometry.coordinates = simplified;
   }
 }
+
 
 /**
  * [showDataVoronoi description]
@@ -341,7 +344,9 @@ async function createCityAndMenu(lat, lon) {
   map.fitBounds(city.getBounds());
 
   // Ajout legende statique
-  let legend = L.control({position: 'bottomright'});
+  let legend = L.control({
+    position: 'bottomright'
+  });
   legend.onAdd = function(map) {
     let div = L.DomUtil.create('div', 'legend'),
       grades = ['0.0', '0.1', '0.2', '0.4', '0.8', '2.0', '4.0', '10'];
@@ -371,7 +376,7 @@ async function createCityAndMenu(lat, lon) {
 
     let divAmenityType = L.DomUtil.create('div', 'command-span-type', div);
     divAmenityType.id = 'amenity-text';
-    let selected_amenity=getCurrentAmenity();
+    let selected_amenity = getCurrentAmenity();
     divAmenityType.innerHTML = elemDescr[selected_amenity].descr;
 
     let divPOI = L.DomUtil.create('div', 'command-span-nbPOI', div);
@@ -381,12 +386,21 @@ async function createCityAndMenu(lat, lon) {
   command.addTo(map);
 
   var sidebar = L.control
-    .sidebar({ container: "sidebar", position: "left" })
+    .sidebar({
+      container: "sidebar",
+      position: "left"
+    })
     .addTo(map);
 
-  map.on('click', function () {
-              sidebar.close();
-          })
+  map.on('click', function() {
+    sidebar.close();
+  });
+
+  let controlscale = L.control.scale({
+    metric: true,
+    imperial: false,
+    position: 'bottomleft'
+  }).addTo(map);
 }
 
 /**
@@ -395,8 +409,12 @@ async function createCityAndMenu(lat, lon) {
  */
 function getCurrentAmenity() {
   let radioboxes = document.getElementsByName("amenity-radio");
-  let selected_amenity='';
-  radioboxes.forEach( radio => {if(radio.checked){selected_amenity=radio.value}});
+  let selected_amenity = '';
+  radioboxes.forEach(radio => {
+    if (radio.checked) {
+      selected_amenity = radio.value
+    }
+  });
   return selected_amenity;
 }
 
@@ -413,8 +431,9 @@ async function showDataVoronoi(lat, lon) {
   // get amenity select and compute voronoi representation
   //let selected_amenity = document.getElementById('amenity-select').value;
   let radioboxes = document.getElementsByName("amenity-radio");
-  let selected_amenity=getCurrentAmenity();
+  let selected_amenity = getCurrentAmenity();
   //radioboxes.forEach( radio => {if(radio.checked){selected_amenity=radio.value}});
   await simplifyCity();
+
   await computeVoronoi(selected_amenity);
 }
