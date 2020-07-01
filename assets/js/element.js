@@ -15,14 +15,11 @@ const elemDescr = {
     "descr": "Poubelle",
     "code": ["amenity=waste_basket"]
   },
-	"cafeBar" : {
-		"descr": "Café / Bar",
-		"code": ["amenity=cafe", "amenity=bar"]
-	},
 	"surveillance" : {
 		"descr": "Caméra de surveillance",
 		"code": ["man_made=surveillance"]
 	}
+
 };
 
 
