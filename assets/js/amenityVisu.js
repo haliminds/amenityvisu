@@ -107,7 +107,8 @@ async function computeVoronoi(amenity) {
   let voronoiPolygons = voronoi.polygons(points);
 
   // pour chaque polygone, on cree un geojson qu'on intégre dans la carte
-  //var t0 = performance.now()
+  //var t0 = performance.now();
+
   for (let zone of voronoiPolygons) {
     if (zone == undefined) {
       continue;
@@ -115,24 +116,8 @@ async function computeVoronoi(amenity) {
     // on cree des vrais polygones avec le premier et dernier elements egaux
     zone.push(zone[0]);
 
-    // on verifie pour chaque zone si tous les points sont dans la ville
-    let intersect_arr = [];
-
-    let isZoneInsideCity = true;
-    for (let cityPart of cityGeoJson.features[0].geometry.coordinates) {
-      isZoneInsideCity = true;
-      for (let point of zone) {
-        if (!d3.polygonContains(cityPart, point)) {
-          isZoneInsideCity = false;
-          break
-        }
-      }
-    }
-
-    // on calcule l'intersection de la zone avec celle de la commune entière quand un des points de la zone est en dehors de la ville
-    intersect_arr = ((isZoneInsideCity) ? [
-      [zone]
-    ] : martinez.intersection(cityGeoJson.features[0].geometry.coordinates, [zone]));
+    //on calcule l'intersection de la zone avec celle de la commune entière
+    let intersect_arr = martinez.intersection(cityGeoJson.features[0].geometry.coordinates, [zone]);
 
     // Pour chaque zone, on affiche la zone ainsi que le seed de la zone
     let geojsonMarkerOptions = {
@@ -188,8 +173,8 @@ async function computeVoronoi(amenity) {
     }
   };
 
-  /*var t1 = performance.now()
-  console.log("Call to compute polygon " + (t1 - t0) + " milliseconds.")*/
+  /*var t1 = performance.now();
+  console.log("Call to compute polygon " + (t1 - t0) + " milliseconds.");*/
 }
 
 
