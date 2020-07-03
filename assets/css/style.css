@@ -8,8 +8,6 @@ html, body, #map {
     width: 100vw;
 }
 
-
-
 img {
 	display: block;
 	margin-left: auto;
@@ -68,6 +66,74 @@ img {
 .leaflet-container .leaflet-control-attribution {
   padding: 2px 4px;
   font-size:8px;
+  }
+
+
+
+  .amenitymatrix {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 15px;
+    text-align: center;
+    font-family: 'Jaldi', sans-serif;
+  }
+
+
+
+  .amenitymatrix input[type="radio"] {
+  	display : none;
+  }
+
+
+  .singleamenity {
+    width: 40%;
+    border: solid 1px #222;
+    border-radius: 5%;
+    transition: all 0.1s ease-in;
+    margin: 2px;
+  }
+
+
+  .singleamenity:hover {
+    transform: scale(1.1);
+    opacity: .8;
+    cursor: pointer;
+    z-index: 100;
+    border: solid 2px #000;
+    box-shadow: 2px 2px 2px #222;
+  }
+
+  .amenitymatrix input[type="radio"]:checked + .singleamenity{
+  	opacity: .8;
+  	border: solid 4px #0074d9;
+  	box-shadow: 2px 2px 2px #222;
+  	z-index: 150;
+  	transform: scale(1.1);
+  	cursor:default;
+  }
+
+  div.bicycleparking-img {
+  	content:url(../img/bicycleparking-512.svg);
+  }
+
+   div.bench-img {
+  	content:url(../img/bench-512.svg);
+  }
+
+  div.wastebasket-img {
+  	content:url(../img/wastebasket-512.svg);
+  }
+
+  div.toilets-img {
+  	content:url(../img/toilets-512.svg);
+  }
+
+  #field-amenity {
+  	text-align: center;
+  	font-size: .9rem;
+  	margin-top : 10px;
   }
 
 
