@@ -16,15 +16,15 @@ async function getAmenityByOverPass(cityGeoJson, amenityType) {
   // 3600000000 : on ajoute pour avoir la "relation" correpondante
   const area_id = 3600000000 + parseInt(cityGeoJson.features[0].properties.osm_id, 10);
   let overpassAmenityList = '';
-  elemDescr[amenityType]["code"].forEach(elem => overpassAmenityList += 'node[' + elem + ']["access"!~"private"](area.searchArea);');
-  const overpassApiUrl = OVERPASSURL + 'data=[out:json];area(' + area_id + ')->.searchArea;' + overpassAmenityList + 'out;';
+  // access to all nodes and the center of way.
+  elemDescr[amenityType]["code"].forEach(elem => overpassAmenityList += 'node[' + elem + ']["access"!~"private"](area.searchArea);way[' + elem + ']["access"!~"private"](area.searchArea);');
+  const overpassApiUrl = OVERPASSURL + 'data=[out:json];area(' + area_id + ')->.searchArea;(' + overpassAmenityList + ');out center;';
   let responseOverpass = await fetch(overpassApiUrl);
   let osmDataAsJson = await responseOverpass.json(); // read response body and parse as JSON
 
   // tranformation de la reponse en geojson
   return osmtogeojson(osmDataAsJson);
 }
-
 
 
 /**
