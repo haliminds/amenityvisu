@@ -17,7 +17,7 @@ function initialize(loaderGif) {
   fillMapInnerHTML("<img src=\"" + loaderGif + "\"/>");
 
   if (navigator.geolocation) {
-    let location_timeout = setTimeout("fillMapInnerHTML('<br><br>GPS non activé !')", 5000);
+    let location_timeout = setTimeout("fillMapInnerHTML('<div class=\"no-gps\">GPS non activé !</div>')", 5000);
     let geoOptions = {
       enableHighAccuracy: false,
       maximumAge: 10000,
@@ -34,11 +34,11 @@ function initialize(loaderGif) {
 
     }, function(error) {
       clearTimeout(location_timeout);
-      fillMapInnerHTML('<br><br>GPS non activé !');
+      fillMapInnerHTML('<div class=\"no-gps\">GPS non activé !</div>');
     }, geoOptions);
   } else {
     // Fallback for no geolocation
-    fillMapInnerHTML('<br><br>GPS non activé !');
+    fillMapInnerHTML('<div class=\"no-gps\">GPS non activé !</div>');
   }
 }
 
@@ -62,6 +62,34 @@ function computePolygonArea(polygon) {
 }
 
 
+/*function findNonUniqueValue(points_list) { 
+	let sort_arr = points_list.slice().sort(); 
+	for (var i = 0; i < sort_arr.length - 1; i++) { 
+		if(JSON.stringify(sort_arr[i + 1])==JSON.stringify(sort_arr[i])) { 
+			console.log(sort_arr[i]); 
+		}
+	}
+}*/
+
+function eliminateDuplicatesPoints(points_list) {
+  let len = points_list.length;
+  let out = [];
+  let obj = {};
+
+  // convert elements in key (string)
+  for (let i = 0; i < len; i++) {
+    obj[points_list[i]] = 0;
+  }
+  
+  for (let str_i in obj) {
+	  let str_part = str_i.split(',');
+	  let newpoints = [parseFloat(str_part[0]), parseFloat(str_part[1])];
+      out.push(newpoints);
+  }
+  return out;
+}
+
+
 /**
  * [computeVoronoi description]
  * @param  {[type]} amenity [description]
@@ -82,9 +110,10 @@ async function computeVoronoi(amenity) {
   // Get all elements of city with OverPassTurbo
   let elementData = await getAmenityByOverPass(cityGeoJson, amenity);
 
-  // chargement des points et transformation du tableau en objet
+  // chargement des points, transformation du tableau en objet et suppression des doublons
   var points = [];
   elementData.features.forEach(elem => points.push(elem.geometry.coordinates));
+  points = eliminateDuplicatesPoints(points);
 
   // Update command
   const elemNbTxt = ((points.length > 1) ? " éléments référencés)" : " élément référencé)");
@@ -99,26 +128,27 @@ async function computeVoronoi(amenity) {
   // without margin, some points may be on city frontier and create an error for intersect algorithm
   let margin = 1e-3;
   let boundd3js = [
-    [city.getBounds()._southWest.lng - margin, city.getBounds()._southWest.lat - margin],
-    [city.getBounds()._northEast.lng + margin, city.getBounds()._northEast.lat + margin]
+    city.getBounds()._southWest.lng - margin, city.getBounds()._southWest.lat - margin,
+    city.getBounds()._northEast.lng + margin, city.getBounds()._northEast.lat + margin
   ];
-  let voronoi = d3.voronoi().extent(boundd3js); // limite commune
-  // on cree le diagramme de voronoi a partir des data
-  let voronoiPolygons = voronoi.polygons(points);
 
   // pour chaque polygone, on cree un geojson qu'on intégre dans la carte
-  //var t0 = performance.now();
+  /*var t0 = performance.now();*/
+  
+  // Creation du diagramme de voronoi avec d3-delaunay
+  const delaunay = d3.Delaunay.from(points);
+  const voronoiPolygons_ = delaunay.voronoi(boundd3js);
 
-  for (let zone of voronoiPolygons) {
+  let pts_idx = 0;
+  //-for (let zone of voronoiPolygons) {
+  for (let zone of voronoiPolygons_.cellPolygons()) {
     if (zone == undefined) {
       continue;
     }
-    // on cree des vrais polygones avec le premier et dernier elements egaux
-    zone.push(zone[0]);
 
     //on calcule l'intersection de la zone avec celle de la commune entière
     let intersect_arr = martinez.intersection(cityGeoJson.features[0].geometry.coordinates, [zone]);
-
+	
     // Pour chaque zone, on affiche la zone ainsi que le seed de la zone
     let geojsonMarkerOptions = {
       radius: 3,
@@ -128,10 +158,11 @@ async function computeVoronoi(amenity) {
       opacity: 1,
       fillOpacity: 1
     };
+	let seed_pt = [voronoiPolygons_.delaunay.points[2*pts_idx], voronoiPolygons_.delaunay.points[1+2*(pts_idx++)]];
 
     for (let intersect_part of intersect_arr) {
       // si l'element est dans la zone, on calcule son aire sinon, on met cette aire au max.
-      let area = ((d3.polygonContains(intersect_part[0], zone.data)) ? computePolygonArea(intersect_part[0]) * 1000 * 1000 : 1e7);
+	  let area = ((d3.polygonContains(intersect_part[0], seed_pt)) ? computePolygonArea(intersect_part[0]) * 1000 * 1000 : 1e7);
       let interseect_zone = {
         "type": "FeatureCollection",
         "features": [{
@@ -147,7 +178,7 @@ async function computeVoronoi(amenity) {
 
       interseect_zone.features[0].properties = {
         "area": area,
-        "amenity_coord": zone.data
+		"amenity_coord": seed_pt
       };
       interseect_zone.features[0].geometry.coordinates = intersect_part;
       L.geoJson(interseect_zone, {
@@ -155,13 +186,13 @@ async function computeVoronoi(amenity) {
         //onEachFeature: onEachFeature
       }).addTo(map);
 
-      //
+      // add amenity center on map
       let amenity_point = {
         "type": "Feature",
         "tag": "amenity_pt",
         "geometry": {
           "type": "Point",
-          "coordinates": zone.data
+		  "coordinates": seed_pt
         }
       };
       L.geoJson(amenity_point, {
