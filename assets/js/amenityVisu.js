@@ -60,6 +60,11 @@ function computePolygonArea(polygon) {
   return Math.abs(Ldeg * Ldeg * Math.cos(centroid[1] * Math.PI / 180) * d3.polygonArea(polygon));
 }
 
+/**
+ * [eliminateDuplicatesPoints description]
+ * @param  {[type]} points_list [description]
+ * @return {[type]}             [description]
+ */
 function eliminateDuplicatesPoints(points_list) {
   let obj = {};
   // convert elements in key (string) to eliminate redundant values
@@ -90,10 +95,8 @@ async function computeVoronoi(amenity) {
   let elementData = await getAmenityByOverPass(cityGeoJson, amenity);
 
   // chargement des points, transformation du tableau en objet et suppression des doublons
-  var points = [];
+  let points = [];
   elementData.features.forEach(elem => points.push(elem.geometry.coordinates));
-
-
   points = eliminateDuplicatesPoints(points);
 
   // Update command
@@ -117,8 +120,7 @@ async function computeVoronoi(amenity) {
   /*var t0 = performance.now();*/
 
   // Creation du diagramme de voronoi avec d3-delaunay
-  const delaunay = d3.Delaunay.from(points);
-  const voronoiPolygons_ = delaunay.voronoi(boundd3js);
+  const voronoiPolygons_ = d3.Delaunay.from(points).voronoi(boundd3js);
 
   let pts_idx = 0;
   for (let zone of voronoiPolygons_.cellPolygons()) {
@@ -228,7 +230,7 @@ function getColor(d) {
  * @return {[type]}     [description]
  */
 async function removeMarkers(map, tag) {
-  map.eachLayer(function(layer) {
+  map.eachLayer(layer => {
     if (layer.feature && layer.feature.tag && layer.feature.tag === tag) {
       map.removeLayer(layer);
     }
@@ -280,7 +282,6 @@ async function createCityAndMenu(lat, lon) {
     maxZoom: 20,
     ext: 'png'
   });
-
 
   // clear map and fill it
   fillMapInnerHTML('');
@@ -392,6 +393,5 @@ async function showDataVoronoi(lat, lon) {
   let selected_amenity = getCurrentAmenity();
   //radioboxes.forEach( radio => {if(radio.checked){selected_amenity=radio.value}});
   await simplifyCity();
-
   await computeVoronoi(selected_amenity);
 }
