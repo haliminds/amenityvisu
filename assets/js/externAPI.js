@@ -23,7 +23,7 @@ async function getAmenityByOverPass(cityGeoJson, amenityType) {
   let osmDataAsJson = await responseOverpass.json(); // read response body and parse as JSON
 
   // tranformation de la reponse en geojson
-  return osmtogeojson(osmDataAsJson);
+  return await osmtogeojson(osmDataAsJson);
 }
 
 
@@ -53,5 +53,5 @@ async function getCityByLatLng(lat, lon) {
     nominatimGeoJson = await response_city.json();
   }
 
-  return nominatimGeoJson;
+  return await nominatimGeoJson;
 }
