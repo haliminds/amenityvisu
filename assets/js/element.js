@@ -45,13 +45,6 @@ function createSideBar() {
   div_content_amenity.id = id_amenity;
   div_content_amenity.innerHTML += '<h1 class="leaflet-sidebar-header">Points d\'intérêt<span class="leaflet-sidebar-close"><i class="fa fa-caret-left"></i></span></h1><br>';
 
-  /*
-  let amenity_option = '';
-  for (let amenity in elemDescr) {
-    amenity_option += '<input type="radio" id='+amenity+' name="amenity-radio" value='+amenity+' onchange="computeVoronoi(this.value);" '+checked+'><label for='+amenity+'>'+elemDescr[amenity].descr+'</label><br>'
-    checked = '';
-  }
-  */
 
   let checked = 'checked';
   let amenity_option = '<div class="amenitymatrix">';
