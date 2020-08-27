@@ -119,10 +119,12 @@ async function computeVoronoi(amenity) {
   ];
   // on cree le diagramme de voronoi a partir des data
   let voronoiPolygons = await d3.voronoi().extent(boundd3js).polygons(points);
+  //const voronoiPolygons_ = await d3.Delaunay.from(points).voronoi(boundd3js);
 
   // pour chaque polygone, on cree un geojson qu'on intégre dans la carte
   //var t0 = performance.now();
 
+  //for (let zone of voronoiPolygons_.cellPolygons()) {
   for (let zone of voronoiPolygons) {
     if (zone == undefined) {
       continue;
@@ -142,9 +144,11 @@ async function computeVoronoi(amenity) {
       fillOpacity: 1
     };
 
+    // let seed_pt = [voronoiPolygons_.delaunay.points[2 * pts_idx], voronoiPolygons_.delaunay.points[1 + 2 * (pts_idx++)]];
+    let seed_pt = zone.data;
     for (let intersect_part of intersect_arr) {
       // si l'element est dans la zone, on calcule son aire sinon, on met cette aire au max.
-      let area = ((d3.polygonContains(intersect_part[0], zone.data)) ? computePolygonArea(intersect_part[0]) * 1000 * 1000 : 1e7);
+      let area = ((d3.polygonContains(intersect_part[0], seed_pt)) ? computePolygonArea(intersect_part[0]) * 1000 * 1000 : 1e7);
       let interseect_zone = {
         "type": "FeatureCollection",
         "features": [{
@@ -160,7 +164,7 @@ async function computeVoronoi(amenity) {
 
       interseect_zone.features[0].properties = {
         "area": area,
-        "amenity_coord": zone.data
+        "amenity_coord": seed_pt
       };
       interseect_zone.features[0].geometry.coordinates = intersect_part;
       L.geoJson(interseect_zone, {
@@ -174,7 +178,7 @@ async function computeVoronoi(amenity) {
         "tag": "amenity_pt",
         "geometry": {
           "type": "Point",
-          "coordinates": zone.data
+          "coordinates": seed_pt
         }
       };
       L.geoJson(amenity_point, {
@@ -255,11 +259,10 @@ async function simplifyCity() {
   }
   // if multipolygon, simplify each polygon
   if (cityGeoJson.features[0].geometry.coordinates.length > 1) {
-    let city_part_id = 0
-    for (let coord of cityGeoJson.features[0].geometry.coordinates) {
+    cityGeoJson.features[0].geometry.coordinates.forEach((coord, i) => {
       let simplified = simplify(coord, optionSimplify);
-      cityGeoJson.features[0].geometry.coordinates[city_part_id++] = simplified;
-    }
+      cityGeoJson.features[0].geometry.coordinates[i] = simplified;
+    });
   } else {
     let simplified = simplify(cityGeoJson.features[0].geometry.coordinates, optionSimplify);
     cityGeoJson.features[0].geometry.coordinates = simplified;
@@ -285,9 +288,7 @@ async function createCityAndMenu(lat, lon) {
 
   // clear map and fill it
   fillMapInnerHTML('');
-  map = new L.Map("map", {
-    layers: [stamenToner]
-  });
+  map = new L.Map("map", {layers: [stamenToner]});
 
   // Get city geojson with lat / lon
   cityGeoJson = await getCityByLatLng(lat, lon);
