@@ -14,6 +14,10 @@ const elemDescr = {
   "wastebasket": {
     "descr": "Poubelle",
     "code": ["amenity=waste_basket"]
+  },
+  "transport" : {
+    "descr": "Arrêt transport en commun",
+    "code" : ["public_transport=stop_position", "train!=yes"]
   }
 };
 

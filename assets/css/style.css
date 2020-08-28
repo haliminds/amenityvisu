@@ -122,6 +122,10 @@ img {
   	cursor:default;
   }
 
+  div.transport-img {
+    content:url(../img/transport-512.svg);
+  }
+
   div.bicycleparking-img {
   	content:url(../img/bicycleparking-512.svg);
   }

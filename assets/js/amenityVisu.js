@@ -234,7 +234,7 @@ function getColor(d) {
  * @return {[type]}     [description]
  */
 async function removeMarkers(map, tag) {
-  map.eachLayer( layer => {
+  map.eachLayer(layer => {
     if (layer.feature && layer.feature.tag && layer.feature.tag === tag) {
       map.removeLayer(layer);
     }
@@ -288,7 +288,9 @@ async function createCityAndMenu(lat, lon) {
 
   // clear map and fill it
   fillMapInnerHTML('');
-  map = new L.Map("map", {layers: [stamenToner]});
+  map = new L.Map("map", {
+    layers: [stamenToner]
+  });
 
   // Get city geojson with lat / lon
   cityGeoJson = await getCityByLatLng(lat, lon);
