@@ -142,6 +142,10 @@ img {
   	content:url(../img/toilets-512.svg);
   }
 
+  div.opinion-img {
+  	content:url(../img/opinion-512.svg);
+  }
+
   #field-amenity {
   	text-align: center;
   	font-size: .9rem;

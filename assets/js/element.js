@@ -18,6 +18,10 @@ const elemDescr = {
   "transport" : {
     "descr": "Arrêt transport en commun",
     "code" : ["public_transport=stop_position", "train!=yes"]
+  },
+  "opinion" : {
+    "descr": "Affichage libre",
+    "code" : ['"legal_type:FR"="opinions/associations"']
   }
 };
 
