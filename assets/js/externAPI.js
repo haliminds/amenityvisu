@@ -37,24 +37,21 @@ async function getAmenityByOverPass(cityGeoJson, amenityType) {
  * @return {[type]} json response of nominatim api
  */
 async function getCityByLatLng(lat, lon) {
-  // appelle Nominatim pour savoir dans quelle commune on se trouve
-  // On fait un 1er appel à du reverse et/ou un appel normal pour avoir l'osm_id et le geojson si le premier appel merde
+  // appelle Nominatim reverse pour savoir dans quelle commune on se trouve
   const nominatiUrl = NOMINATIMREVERSEURL + 'lat=' + lat + '&lon=' + lon + '&polygon_geojson=1&format=geojson&zoom=10';
+  console.log(nominatiUrl)
   let nominatimResp = await fetch(nominatiUrl);
   let nominatimGeoJson = await nominatimResp.json(); // read response body and parse as JSON
-  // Si ça pointe sur un ensemble de type Point, y'a un souci
-  // @TODO regarder si il faut d'autres verifs !!
+  // recuperation de la commune
   let cityname = nominatimGeoJson.features[0].properties.address.city || nominatimGeoJson.features[0].properties.address.municipality;
   // si ça pointe n'import où, ben tant pis !
   if (cityname == undefined) {
     return null;
   }
-  // sinon, on cherche les infos sur la ville pointee
-  if (nominatimGeoJson.features[0].geometry.type == "Point") {
-    const urlCity = NOMINATIMSEARCHURL + 'city=' + cityname + '&polygon_geojson=1&format=geojson&addressdetails=1';
-    let response_city = await fetch(urlCity);
-    nominatimGeoJson = await response_city.json();
-  }
+  // appelle nominatim pour avoir le geojson à partir de la ville (pb avec le reverse)
+  const urlCity = NOMINATIMSEARCHURL + 'city=' + cityname + '&polygon_geojson=1&format=geojson&addressdetails=1';
+  let response_city = await fetch(urlCity);
+  nominatimGeoJson = await response_city.json();
 
   return await nominatimGeoJson;
 }
