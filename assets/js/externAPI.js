@@ -38,12 +38,12 @@ async function getAmenityByOverPass(cityGeoJson, amenityType) {
  */
 async function getCityByLatLng(lat, lon) {
   // appelle Nominatim reverse pour savoir dans quelle commune on se trouve
-  const nominatiUrl = NOMINATIMREVERSEURL + 'lat=' + lat + '&lon=' + lon + '&polygon_geojson=1&format=geojson&zoom=10';
+  const nominatiUrl = NOMINATIMREVERSEURL + 'lat=' + lat + '&lon=' + lon + '&format=geojson';
   console.log(nominatiUrl)
   let nominatimResp = await fetch(nominatiUrl);
   let nominatimGeoJson = await nominatimResp.json(); // read response body and parse as JSON
   // recuperation de la commune
-  let cityname = nominatimGeoJson.features[0].properties.address.city || nominatimGeoJson.features[0].properties.address.municipality;
+  let cityname = nominatimGeoJson.features[0].properties.address.town || nominatimGeoJson.features[0].properties.address.city || nominatimGeoJson.features[0].properties.address.municipality;
   // si ça pointe n'import où, ben tant pis !
   if (cityname == undefined) {
     return null;
