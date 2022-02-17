@@ -323,7 +323,7 @@ async function createCityAndMenu(lat, lon) {
   legend.addTo(map);
 
   // Ajout d'un paneau de commande
-  let cityname = cityGeoJson.features[0].properties.address.city || cityGeoJson.features[0].properties.address.municipality;
+  let cityname = cityGeoJson.features[0].properties.address.town || cityGeoJson.features[0].properties.address.city || nominatimGeoJson.features[0].properties.address.municipality;
   var command = L.control({
     position: 'topright'
   });
