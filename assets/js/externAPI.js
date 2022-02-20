@@ -38,13 +38,13 @@ async function getAmenityByOverPass(cityGeoJson, amenityType) {
  * @return {[type]} json response of nominatim api
  */
 async function getCityByLatLng(lat, lon) {
-  // appelle BigSataCloud pour savoir dans quelle commune on se trouve
-  const requestiUrl = `${BIGDATACLOUD}latitude=${lat}&longitude=${lon}&localityLanguage=fr`;
-  const requestResp = await fetch(requestiUrl);
-  const requestJson = await requestResp.json(); // read response body and parse as JSON
- 
+// appelle Nominatim reverse pour savoir dans quelle commune on se trouve
+  const nominatiUrl = `${NOMINATIMREVERSEURL}lat=${lat}&lon=${lon}&format=geojson`;
+
+  let nominatimResp = await fetch(nominatiUrl);
+  let nominatimGeoJson = await nominatimResp.json(); // read response body and parse as JSON
   // recuperation de la commune
-  let cityname = requestResp.city.length>0 ? requestResp.city : requestResp.locality 
+  let cityname = nominatimGeoJson.features[0].properties.address.town || nominatimGeoJson.features[0].properties.address.city || nominatimGeoJson.features[0].properties.address.municipality;
   // si ça pointe n'import où, ben tant pis !
   if (cityname == undefined) {
     return null;
