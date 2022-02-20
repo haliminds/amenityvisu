@@ -1,8 +1,9 @@
 
 const OVERPASSURL = 'https://lz4.overpass-api.de/api/interpreter?';
 const NOMINATIM = 'https://nominatim.openstreetmap.org/';
-const NOMINATIMREVERSEURL = NOMINATIM + 'reverse?'
-const NOMINATIMSEARCHURL = NOMINATIM + 'search.php?'
+const NOMINATIMREVERSEURL = `${NOMINATIM}reverse?`
+const NOMINATIMSEARCHURL = `${NOMINATIM}search.php?`
+const BIGDATACLOUD = "https://api.bigdatacloud.net/data/reverse-geocode-client?"
 
 /**
  * Recherche les elements de type amenityType dans la ville cityGeoJson
@@ -37,19 +38,17 @@ async function getAmenityByOverPass(cityGeoJson, amenityType) {
  * @return {[type]} json response of nominatim api
  */
 async function getCityByLatLng(lat, lon) {
-  // appelle Nominatim reverse pour savoir dans quelle commune on se trouve
-  const nominatiUrl = NOMINATIMREVERSEURL + 'lat=' + lat + '&lon=' + lon + '&format=geojson';
-  console.log(nominatiUrl)
-  let nominatimResp = await fetch(nominatiUrl);
-  let nominatimGeoJson = await nominatimResp.json(); // read response body and parse as JSON
+  // appelle BigSataCloud pour savoir dans quelle commune on se trouve
+  const requestiUrl = `${BIGDATACLOUD}latitude=${lat}&longitude=${lon}&localityLanguage=fr`;
+  let requestResp = await fetch(requestiUrl);
   // recuperation de la commune
-  let cityname = nominatimGeoJson.features[0].properties.address.town || nominatimGeoJson.features[0].properties.address.city || nominatimGeoJson.features[0].properties.address.municipality;
+  let cityname = requestResp.locality || requestResp.city
   // si ça pointe n'import où, ben tant pis !
   if (cityname == undefined) {
     return null;
   }
   // appelle nominatim pour avoir le geojson à partir de la ville (pb avec le reverse)
-  const urlCity = NOMINATIMSEARCHURL + 'city=' + cityname + '&polygon_geojson=1&format=geojson&addressdetails=1';
+  const urlCity = `${NOMINATIMSEARCHURL}city=${cityname}&polygon_geojson=1&format=geojson&addressdetails=1`;
   let response_city = await fetch(urlCity);
   nominatimGeoJson = await response_city.json();
 
