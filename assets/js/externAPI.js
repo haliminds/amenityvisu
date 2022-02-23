@@ -1,9 +1,8 @@
 
-const OVERPASSURL = 'https://lz4.overpass-api.de/api/interpreter?';
-const NOMINATIM = 'https://nominatim.openstreetmap.org/';
-const NOMINATIMREVERSEURL = `${NOMINATIM}reverse?`
-const NOMINATIMSEARCHURL = `${NOMINATIM}search.php?`
-const BIGDATACLOUD = "https://api.bigdatacloud.net/data/reverse-geocode-client?"
+const OVERPASSURL = 'https://maps.mail.ru/osm/tools/overpass/api/interpreter?';
+const GEOAPIURL = 'https://geo.api.gouv.fr/communes'
+const GEOAPIOPTIONS = '&fields=code,nom,codesPostaux,contour'
+
 
 /**
  * Recherche les elements de type amenityType dans la ville cityGeoJson
@@ -11,20 +10,18 @@ const BIGDATACLOUD = "https://api.bigdatacloud.net/data/reverse-geocode-client?"
  * @param  {[type]} amenityType [description]
  * @return {[type]}         [description]
  */
-async function getAmenityByOverPass(cityGeoJson, amenityType) {
+ async function getAmenityByOverPass(codeInsee, amenityType) {
 
-  // Recherche des elements dans cette zone
-  // 3600000000 : on ajoute pour avoir la "relation" correpondante
-  const area_id = 3600000000 + parseInt(cityGeoJson.features[0].properties.osm_id, 10);
-  let overpassAmenityList = '';
   let elemnList = '';
   // access to all nodes and the center of way.
   elemDescr[amenityType]["code"].forEach(elem => elemnList+= '[' + elem + ']');
-  overpassAmenityList += 'node' + elemnList + '["access"!~"private"](area.searchArea);way' + elemnList + '["access"!~"private"](area.searchArea);'
+  const overpassAmenityList = `node${elemnList}["access"!~"private"](area.zip);way${elemnList}["access"!~"private"](area.zip);`;
 
-  const overpassApiUrl = OVERPASSURL + 'data=[out:json];area(' + area_id + ')->.searchArea;(' + overpassAmenityList + ');out center;';
-  let responseOverpass = await fetch(overpassApiUrl);
-  let osmDataAsJson = await responseOverpass.json(); // read response body and parse as JSON
+  const area = `area["ref:INSEE"=${codeInsee}][boundary=administrative]->.zip`
+  const overpassApiUrl = `${OVERPASSURL}data=[out:json];${area};(${overpassAmenityList});out center;`;
+
+  const responseOverpass = await fetch(overpassApiUrl);
+  const osmDataAsJson = await responseOverpass.json(); // read response body and parse as JSON
 
   // tranformation de la reponse en geojson
   return await osmtogeojson(osmDataAsJson);
@@ -37,22 +34,12 @@ async function getAmenityByOverPass(cityGeoJson, amenityType) {
  * @param  {float} lon input longitude
  * @return {[type]} json response of nominatim api
  */
-async function getCityByLatLng(lat, lon) {
-// appelle Nominatim reverse pour savoir dans quelle commune on se trouve
-  const nominatiUrl = `${NOMINATIMREVERSEURL}lat=${lat}&lon=${lon}&format=geojson`;
-
-  let nominatimResp = await fetch(nominatiUrl);
-  let nominatimGeoJson = await nominatimResp.json(); // read response body and parse as JSON
-  // recuperation de la commune
-  let cityname = nominatimGeoJson.features[0].properties.address.town || nominatimGeoJson.features[0].properties.address.city || nominatimGeoJson.features[0].properties.address.municipality;
-  // si ça pointe n'import où, ben tant pis !
-  if (cityname == undefined) {
-    return null;
-  }
-  // appelle nominatim pour avoir le geojson à partir de la ville (pb avec le reverse)
-  const urlCity = `${NOMINATIMSEARCHURL}city=${cityname}&polygon_geojson=1&format=geojson&addressdetails=1`;
-  let response_city = await fetch(urlCity);
-  nominatimGeoJson = await response_city.json();
-
-  return await nominatimGeoJson;
-}
+ async function getCityByLatLng(lat, lon) {
+  
+    const geoApiUrl = `${GEOAPIURL}?lat=${lat}&lon=${lon}${GEOAPIOPTIONS}`;
+    const response = await fetch(geoApiUrl);
+    const responsejson = await response.json(); // read response body and parse as JSON
+    
+    return await responsejson[0]
+    }
+  

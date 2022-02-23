@@ -3,8 +3,8 @@
  *
  */
 
-var map = "";
-var cityGeoJson = "";
+let map = "";
+let cityGeoJson = "";
 
 
 /**
@@ -94,7 +94,7 @@ async function computeVoronoi(amenity) {
   await removeMarkers(map, "amenity_pt");
 
   // Get all elements of city with OverPassTurbo
-  let elementData = await getAmenityByOverPass(cityGeoJson, amenity);
+  let elementData = await getAmenityByOverPass(cityGeoJson.code, amenity)
 
   // chargement des points et transformation du tableau en objet
   var points = [];
@@ -105,7 +105,7 @@ async function computeVoronoi(amenity) {
   const elemNbTxt = ((points.length > 1) ? " éléments référencés)" : " élément référencé)");
   div_nbPOI.innerHTML = "(" + points.length + elemNbTxt;
 
-  let city = L.geoJson(cityGeoJson.features[0]);
+  let city = L.geoJson(cityGeoJson.contour);
   // Comme toujours avec D3JS lorsqu'un type de graphique a été intégré, il est très
   // facile à mettre en oeuvre. la fonction voronoi appliquée sur la liste des points
   // filtrés ajoutent pour chacun d'eux le polygone que l'on va représenter.
@@ -132,7 +132,7 @@ async function computeVoronoi(amenity) {
     // on cree des vrais polygones avec le premier et dernier elements egaux
     zone.push(zone[0]);
     //on calcule l'intersection de la zone avec celle de la commune entière
-    let intersect_arr = martinez.intersection(cityGeoJson.features[0].geometry.coordinates, [zone]);
+    let intersect_arr = martinez.intersection(cityGeoJson.contour.coordinates, [zone]);
 
     // Pour chaque zone, on affiche la zone ainsi que le seed de la zone
     let geojsonMarkerOptions = {
@@ -258,14 +258,14 @@ async function simplifyCity() {
     highQuality: false
   }
   // if multipolygon, simplify each polygon
-  if (cityGeoJson.features[0].geometry.coordinates.length > 1) {
-    cityGeoJson.features[0].geometry.coordinates.forEach((coord, i) => {
+  if (cityGeoJson.contour.coordinates.length > 1) {
+    cityGeoJson.contour.coordinates.forEach((coord, i) => {
       let simplified = simplify(coord, optionSimplify);
-      cityGeoJson.features[0].geometry.coordinates[i] = simplified;
+      cityGeoJson.contour.coordinates[i] = simplified;
     });
   } else {
-    let simplified = simplify(cityGeoJson.features[0].geometry.coordinates, optionSimplify);
-    cityGeoJson.features[0].geometry.coordinates = simplified;
+    let simplified = simplify(cityGeoJson.contour.coordinates, optionSimplify);
+    cityGeoJson.contour.coordinates = simplified;
   }
 }
 
@@ -294,13 +294,14 @@ async function createCityAndMenu(lat, lon) {
 
   // Get city geojson with lat / lon
   cityGeoJson = await getCityByLatLng(lat, lon);
+
   if (cityGeoJson == null) {
     map.setView(L.latLng(lat, lon), zoom = 11);
     return;
   }
+  let city = L.geoJson(cityGeoJson.contour);
+  let cityName = cityGeoJson.nom;
 
-  // Get only the first element
-  let city = L.geoJson(cityGeoJson.features[0]);
   city.addTo(map);
   map.fitBounds(city.getBounds());
 
@@ -323,8 +324,7 @@ async function createCityAndMenu(lat, lon) {
   legend.addTo(map);
 
   // Ajout d'un paneau de commande
-  let cityname = cityGeoJson.features[0].properties.address.town || cityGeoJson.features[0].properties.address.city || nominatimGeoJson.features[0].properties.address.municipality;
-  var command = L.control({
+  let command = L.control({
     position: 'topright'
   });
 
@@ -334,7 +334,7 @@ async function createCityAndMenu(lat, lon) {
     let spanTitle = L.DomUtil.create('span', 'command-span-title', divHead);
     spanTitle.innerHTML = "Points d\'intérêt<br/>";
     let spanCity = L.DomUtil.create('span', 'command-span-city', divHead);
-    spanCity.innerHTML = '(' + cityname + ')';
+    spanCity.innerHTML = `(${cityName})`;
 
     let divAmenityType = L.DomUtil.create('div', 'command-span-type', div);
     divAmenityType.id = 'amenity-text';
