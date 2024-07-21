@@ -278,11 +278,11 @@ async function simplifyCity() {
  */
 async function createCityAndMenu(lat, lon) {
   // Affiche la carte
-  let stamenToner = L.tileLayer('https://stamen-tiles-{s}.a.ssl.fastly.net/toner/{z}/{x}/{y}.png', {
-    attribution: 'Map tiles by Stamen Design, CC BY 3.0 - Map data © OpenStreetMap',
+  let stamenToner = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution:  '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
     subdomains: 'abcd',
     minZoom: 10,
-    maxZoom: 20,
+    maxZoom: 19,
     ext: 'png'
   });
 
